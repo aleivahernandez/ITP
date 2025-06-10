@@ -109,10 +109,22 @@ st.markdown(
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
-        /* Target the Streamlit-generated container for st.text_area within a form */
-        /* This class name might vary slightly based on Streamlit version */
-        div[data-testid="stForm"] div.st-emotion-cache-1gysd4a, /* Common for textarea containers */
-        div[data-testid="stForm"] div.st-emotion-cache-10o5u3h { /* Another common wrapper for widgets */
+        /* Hide the Streamlit text_area and its container within the form */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] + div > div > textarea[aria-label="Hidden input for problem description"],
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] + div > div > textarea[aria-label="Hidden input for problem description"] + div,
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] + div, /* Target the direct parent of textarea input */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] /* Target the label itself */
+        {
+            display: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+        /* Hide the Streamlit form submit button */
+        div[data-testid="stForm"] button[data-testid="stFormSubmitButton"] {
             display: none !important;
             height: 0 !important;
             width: 0 !important;
