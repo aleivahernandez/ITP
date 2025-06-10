@@ -130,15 +130,6 @@ def load_embedding_model():
         st.success("Modelo de embeddings cargado correctamente.")
     return model
 
-# Removed get_translator() as GoogleTranslator is used directly
-# @st.cache_resource
-# def get_translator():
-#     """
-#     Initializes and returns a googletrans Translator object.
-#     Uses st.cache_resource to ensure it's initialized only once.
-#     """
-#     return Translator()
-
 @st.cache_data
 def translate_text(text, dest_lang='es'):
     """
@@ -160,25 +151,32 @@ def translate_text(text, dest_lang='es'):
 @st.cache_data
 def process_patent_data(file_path):
     """
-    Processes the Excel patent file from a local path.
+    Processes the patent file from a local path (CSV or Excel).
     Reads the file, combines title and summary (after translation), and generates the embeddings.
     `st.cache_data` is used to cache processed data
     and generated embeddings, avoiding unnecessary reprocessing.
     """
     if file_path:
         try:
-            # Reads the Excel file from the local path
-            df = pd.read_excel(file_path)
+            # Check file extension to read correctly
+            if file_path.endswith('.csv'):
+                df = pd.read_csv(file_path)
+            elif file_path.endswith('.xlsx'):
+                df = pd.read_excel(file_path)
+            else:
+                st.error("Formato de archivo no soportado. Por favor, sube un archivo .csv o .xlsx.")
+                return None, None
 
             # Validate that the necessary columns exist with new names
             required_columns = ['Title (Original language)', 'Abstract (Original Language)']
             if not all(col in df.columns for col in required_columns):
-                st.error(f"El archivo Excel debe contener las columnas: {', '.join(required_columns)}")
+                st.error(f"El archivo debe contener las columnas: {', '.join(required_columns)}. "
+                         "Por favor, revisa que los nombres de las columnas sean exactos.")
                 return None, None
 
             # Fill null values with empty strings
             df['Title (Original language)'] = df['Title (Original language)'].fillna('')
-            df['Abstract (Original Language)'] = df['Abstract (Original language)'].fillna('')
+            df['Abstract (Original language)'] = df['Abstract (Original language)'].fillna('')
 
             st.write("Traduciendo títulos y resúmenes (esto puede tardar un momento si hay muchos)...")
             # Translate titles and abstracts to Spanish
@@ -201,14 +199,15 @@ def process_patent_data(file_path):
             st.error(f"Error: El archivo '{file_path}' no se encontró. Asegúrate de que está en la misma carpeta que 'app.py' en tu repositorio de GitHub.")
             return None, None
         except Exception as e:
-            st.error(f"Error al procesar el archivo Excel desde '{file_path}': {e}")
+            st.error(f"Error al procesar el archivo '{file_path}': {e}")
             return None, None
     return None, None
 
 # --- Automatic local Excel file loading section ---
 
-# The name of the local Excel file in the same repository
-excel_file_name = "patentes.xlsx"
+# The name of the local patent file in the same repository
+# Changed to .csv to match the uploaded file
+excel_file_name = "patentes.xlsx - Hoja 1.csv" 
 
 # Initialize df_patents and patent_embeddings
 df_patents = None
@@ -273,7 +272,11 @@ with st.form(key='search_form', clear_on_submit=False):
                             patent_title = df_patents.iloc[idx]['Titulo Traducido']
                             patent_summary = df_patents.iloc[idx]['Resumen Traducido']
                             
-                            patent_number = df_patents.iloc[idx]['numero de patente'] if 'numero de patente' in df_patents.columns else 'N/A'
+                            # It's possible 'numero de patente' might not exist in the new dataset.
+                            # We can also check if a column like 'Publication Number' or 'Patent Number' exists and use that.
+                            patent_number = df_patents.iloc[idx]['numero de patente'] if 'numero de patente' in df_patents.columns else \
+                                            (df_patents.iloc[idx]['Publication Number'] if 'Publication Number' in df_patents.columns else \
+                                            (df_patents.iloc[idx]['Patent Number'] if 'Patent Number' in df_patents.columns else 'N/A'))
 
                             # Escape HTML-breaking characters in the content
                             escaped_patent_title = html.escape(patent_title)
