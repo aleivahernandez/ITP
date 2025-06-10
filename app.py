@@ -207,7 +207,7 @@ def process_patent_data(file_path):
 
 # The name of the local patent file in the same repository
 # Changed to .csv to match the uploaded file
-excel_file_name = "patentes.xlsx - Hoja 1.csv" 
+excel_file_name = "patentes.xlsx" 
 
 # Initialize df_patents and patent_embeddings
 df_patents = None
