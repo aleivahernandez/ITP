@@ -82,13 +82,26 @@ st.markdown(
         /* --- CSS para estilizar componentes nativos de Streamlit --- */
         /* Estiliza el st.text_area para parecerse al input de la imagen */
         textarea[aria-label="Describe tu problema técnico o necesidad funcional:"] {
-            border-radius: 9999px !important; /* Fully rounded */
-            border: 1px solid #d1d5db !important; /* Changed from green to light gray border */
+            /* This textarea itself should have no border, as its parent div will provide it */
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            padding: 0 !important; /* Remove internal padding if container has it */
+            margin: 0 !important; /* Remove internal margin */
+            font-size: 1.125rem !important; /* text-lg */
+            flex-grow: 1; /* Make it take available space */
+            background: transparent !important;
+            resize: none !important; /* Prevent manual resizing */
+        }
+        /* Estiliza el CONTENEDOR del st.text_area para el borde y el redondeo */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div[data-testid="stTextArea"] {
+            border-radius: 0.75rem !important; /* Rounded corners, not fully circular */
+            border: 1px solid #d1d5db !important; /* Light gray border, no green */
             padding: 0.5rem 1.5rem !important; /* Adjust padding */
             box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-            font-size: 1.125rem !important; /* text-lg */
             margin-bottom: 1rem; /* Space below the input */
-            resize: none !important; /* Prevent manual resizing */
+            display: flex; /* Use flex to align content inside */
+            align-items: center; /* Center vertically */
         }
         /* Estiliza el botón de envío del formulario */
         button[data-testid="stFormSubmitButton"] {
@@ -306,5 +319,3 @@ with st.form(key='search_form', clear_on_submit=False):
                             
                 except Exception as e:
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
-
-# No custom JavaScript for syncing is needed now.
