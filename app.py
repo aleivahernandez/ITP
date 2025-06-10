@@ -109,6 +109,10 @@ st.markdown(
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
+        /* Hide the hidden text_area container */
+        .hidden-textarea-container {
+            display: none;
+        }
         .st-emotion-cache-1gysd4a { /* Adjust text area styling */
              border-radius: 0.75rem;
              border: 1px solid #d1d5db;
@@ -226,25 +230,19 @@ st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</
 st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
 
 
-# Custom search input with magnifying glass icon
-search_query = st.text_input(
-    label="search_input",
-    label_visibility="hidden",
-    value="Necesito un sistema de cierre hermético de envases sin usar calor.",
-    placeholder="Describe tu problema técnico o necesidad funcional",
-    key="search_input"
-)
-
 # Fixed number of results, no slider
 MAX_RESULTS = 3
 
 # Use a form to capture the text input and button press together for better UX
 with st.form(key='search_form', clear_on_submit=False):
     # This creates the visual search bar
+    # Initial value for the custom input. This will be updated by the user and by JS
+    initial_search_value = "Necesito un sistema de cierre hermético de envases sin usar calor."
+
     st.markdown(f"""
         <div class="search-input-container">
             <input type="text" id="problem_description_input" name="problem_description" 
-                   value="{search_query}" placeholder="Describe tu problema técnico o necesidad funcional">
+                   value="{initial_search_value}" placeholder="Describe tu problema técnico o necesidad funcional">
             <button type="submit" class="search-button">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6">
                     <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
@@ -253,15 +251,12 @@ with st.form(key='search_form', clear_on_submit=False):
         </div>
         """, unsafe_allow_html=True)
     
-    # Hidden Streamlit text_area to capture the value from the HTML input
-    # This is a workaround because Streamlit widgets don't directly integrate with custom HTML inputs for value updates easily.
-    # We will use JavaScript to update this hidden text_area when the custom HTML input changes.
-    # However, for simplicity with the 'submit' button, we'll assume the text_area holds the main value.
-    # A more robust solution for live updating would require custom JS event listeners.
+    # This hidden Streamlit text_area will capture the value from the custom HTML input via JavaScript.
+    # It is styled to be completely invisible.
     problem_description_from_form = st.text_area(
-        "Ingresa la descripción de tu problema técnico o necesidad funcional:",
-        value=search_query, # Use the initial value from the custom search_query
-        height=68, # Corrected minimum height as per Streamlit's requirement
+        "Hidden input for problem description", # Label, though hidden
+        value=initial_search_value, # Initial value
+        height=68, # Required minimum height for st.text_area
         label_visibility="hidden",
         key="form_problem_description"
     )
@@ -327,9 +322,21 @@ with st.form(key='search_form', clear_on_submit=False):
 st.markdown("""
 <script>
     const customInput = document.getElementById('problem_description_input');
-    const streamlitTextArea = document.querySelector('textarea[aria-label="Ingresa la descripción de tu problema técnico o necesidad funcional:"]');
+    // Find the parent div of the st.text_area based on its label or a characteristic class/attribute
+    // Streamlit adds a class like st-emotion-cache-<hash>-stTextArea to the containing div of st.text_area
+    // We'll target the div that directly contains the textarea.
+    const streamlitTextArea = document.querySelector('textarea[aria-label="Hidden input for problem description"]');
 
     if (customInput && streamlitTextArea) {
+        // Find the top-level parent div of the Streamlit text area to hide it
+        let currentElement = streamlitTextArea;
+        while (currentElement && !currentElement.classList.contains('st-emotion-cache-1gysd4a')) { // Adjust class name as needed
+            currentElement = currentElement.parentElement;
+        }
+        if (currentElement) {
+            currentElement.style.display = 'none'; // Hide the entire Streamlit text area container
+        }
+
         customInput.addEventListener('input', (event) => {
             streamlitTextArea.value = event.target.value;
             // Dispatch input event for Streamlit to recognize the change
