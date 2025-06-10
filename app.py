@@ -163,7 +163,7 @@ def load_embedding_model():
     return model
 
 @st.cache_data
-def process_patent_data(file_path, model_instance): # Pass model instance here
+def process_patent_data(file_path): # Removed model_instance parameter
     """
     Processes the Excel patent file from a local path.
     Reads the file, combines title and summary, and generates the embeddings.
@@ -188,7 +188,11 @@ def process_patent_data(file_path, model_instance): # Pass model instance here
             # Combines title and summary to create a complete patent description
             df['Descripción Completa'] = df['titulo'] + ". " + df['resumen']
 
-            # Generates embeddings for all patent descriptions using the passed model instance
+            # Load the embedding model INSIDE this cached function
+            # Since load_embedding_model is also cached, it will only run once
+            model_instance = load_embedding_model()
+
+            # Generates embeddings for all patent descriptions using the loaded model instance
             corpus_embeddings = model_instance.encode(df['Descripción Completa'].tolist(), convert_to_tensor=True)
             return df, corpus_embeddings
         except FileNotFoundError:
@@ -204,8 +208,8 @@ def process_patent_data(file_path, model_instance): # Pass model instance here
 # The name of the local Excel file in the same repository
 excel_file_name = "patentes.xlsx"
 
-# Load the embedding model globally
-model = load_embedding_model()
+# The embedding model is now loaded inside process_patent_data, no need to load it here
+# model = load_embedding_model() # This line is removed
 
 # Initialize df_patents and patent_embeddings
 df_patents = None
@@ -213,8 +217,8 @@ patent_embeddings = None
 
 # Processes the data automatically upon application startup
 with st.spinner(f"Inicializando base de datos de patentes..."):
-    # Pass the loaded model instance to process_patent_data
-    df_patents, patent_embeddings = process_patent_data(excel_file_name, model)
+    # Call process_patent_data without passing the model instance
+    df_patents, patent_embeddings = process_patent_data(excel_file_name)
 
 if df_patents is None or patent_embeddings is None:
     st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
@@ -255,8 +259,11 @@ with st.form(key='search_form', clear_on_submit=False):
             with st.spinner("Buscando patentes relevantes..."):
                 try:
                     # Generates the embedding of the problem description
-                    # Use the globally loaded model
-                    query_embedding = model.encode(current_problem_description, convert_to_tensor=True)
+                    # Ensure 'model' is accessible here. Since it's loaded globally and then re-loaded in process_patent_data,
+                    # we should retrieve it again to be safe, or just ensure it's in scope.
+                    # Best practice is to call the @st.cache_resource func directly when needed.
+                    current_model = load_embedding_model() 
+                    query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
 
                     # Calculates cosine similarity between the problem and all patents
                     # It's important that both tensors are on the same device (CPU/GPU)
@@ -299,3 +306,4 @@ with st.form(key='search_form', clear_on_submit=False):
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
 # Removed the JavaScript section as it's no longer needed for syncing custom HTML input
+
