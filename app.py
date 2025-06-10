@@ -154,9 +154,8 @@ def load_embedding_model():
     `st.cache_resource` is used to load the model only once and reuse it,
     improving application performance.
     """
-    st.write("Cargando el modelo de embeddings (esto puede tardar un momento)...")
+    # Removed st.write and st.success messages for cleaner loading
     model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-    st.success("Modelo de embeddings cargado correctamente.")
     return model
 
 @st.cache_data
@@ -188,10 +187,9 @@ def process_patent_data(file_path):
             # Loads the embeddings model
             model = load_embedding_model()
 
-            st.write("Generando embeddings para las patentes (esto puede tardar un momento)...")
+            # Removed st.write and st.success messages for cleaner loading
             # Generates embeddings for all patent descriptions
             corpus_embeddings = model.encode(df['Descripción Completa'].tolist(), convert_to_tensor=True)
-            st.success(f"Embeddings generados para {len(df)} patentes.")
             return df, corpus_embeddings
         except FileNotFoundError:
             st.error(f"Error: El archivo '{file_path}' no se encontró. Asegúrate de que está en la misma carpeta que 'app.py' en tu repositorio de GitHub.")
@@ -220,6 +218,8 @@ if df_patents is None or patent_embeddings is None:
              "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
              "y que contenga las columnas 'titulo' y 'resumen'.")
     st.stop() # Stop the app if data can't be loaded
+
+# Removed st.success message here for cleaner loading
 
 # --- Section for problem input and search ---
 st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
