@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
-from deep_translator import GoogleTranslator
+# Removed: from deep_translator import GoogleTranslator
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -96,8 +96,8 @@ st.markdown(
             background-color: #1aae89 !important;
         }
         /* Ajustes de estilos para los elementos de texto estándar de Streamlit, si aparecen */
-        .st-emotion-cache-16idsys p, /* Ajusta el tamaño de fuente predeterminado para st.markdown */
-        .st-emotion-cache-1s2a8v p { /* Ajusta el tamaño de fuente para `p` en `st.markdown` para versiones anteriores */
+        .st-emotion-cache-16idsys p, /* Adjust default paragraph font size for st.markdown */
+        .st-emotion-cache-1s2a8v p { /* Adjust `p` tag font size for `st.markdown` for older versions */
             font-size: 1rem;
         }
         /* Ocultar el label del text_area si no queremos que aparezca */
@@ -130,29 +130,14 @@ def load_embedding_model():
         st.success("Modelo de embeddings cargado correctamente.")
     return model
 
-@st.cache_data
-def translate_text(text, dest_lang='es'):
-    """
-    Translates text to the destination language using deep_translator.
-    Uses st.cache_data to cache translation results.
-    """
-    if pd.isna(text) or text.strip() == "":
-        return ""
-    try:
-        # GoogleTranslator can be used directly without explicit initialization for simple cases
-        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text)
-        return translated
-    except Exception as e:
-        st.warning(f"No se pudo traducir el texto: '{text[:50]}...'. Error: {e}")
-        st.info("Considera traducir la base de datos de Excel previamente para mayor fiabilidad.")
-        return text # Return original text if translation fails
-
+# Removed: @st.cache_resource and get_translator()
+# Removed: translate_text function
 
 @st.cache_data
 def process_patent_data(file_path):
     """
     Processes the patent file from a local path (CSV or Excel).
-    Reads the file, combines title and summary (after translation), and generates the embeddings.
+    Reads the file, combines title and summary, and generates the embeddings.
     `st.cache_data` is used to cache processed data
     and generated embeddings, avoiding unnecessary reprocessing.
     """
@@ -187,14 +172,15 @@ def process_patent_data(file_path):
             df[original_title_col] = df[original_title_col].fillna('')
             df[original_abstract_col] = df[original_abstract_col].fillna('')
 
-            st.write("Traduciendo títulos y resúmenes (esto puede tardar un momento si hay muchos)...")
-            # Translate titles and abstracts to Spanish
-            df['Titulo Traducido'] = df[original_title_col].apply(lambda x: translate_text(x, 'es'))
-            df['Resumen Traducido'] = df[original_abstract_col].apply(lambda x: translate_text(x, 'es'))
-            st.success("Traducción completada.")
+            # No translation step
+            # Removed: st.write("Traduciendo títulos y resúmenes...")
+            # Removed: df['Titulo Traducido'] = df[original_title_col].apply(lambda x: translate_text(x, 'es'))
+            # Removed: df['Resumen Traducido'] = df[original_abstract_col].apply(lambda x: translate_text(x, 'es'))
+            # Removed: st.success("Traducción completada.")
 
-            # Combines the translated title and summary to create a complete patent description
-            df['Descripción Completa'] = df['Titulo Traducido'] + ". " + df['Resumen Traducido']
+
+            # Combines the original title and summary to create a complete patent description
+            df['Descripción Completa'] = df[original_title_col] + ". " + df[original_abstract_col]
 
             # Load the embedding model INSIDE this cached function
             # Since load_embedding_model is also cached, it will only run once
@@ -277,9 +263,10 @@ with st.form(key='search_form', clear_on_submit=False):
                     else:
                         for i, idx in enumerate(top_results_indices):
                             score = cosine_scores[idx].item()
-                            # Use the translated title and abstract for display
-                            patent_title = df_patents.iloc[idx]['Titulo Traducido']
-                            patent_summary = df_patents.iloc[idx]['Resumen Traducido']
+                            # Use the original (untranslated) title and abstract for display
+                            # Access columns using their normalized names
+                            patent_title = df_patents.iloc[idx]['title (original language)']
+                            patent_summary = df_patents.iloc[idx]['abstract (original language)']
                             
                             # It's possible 'numero de patente' might not exist in the new dataset.
                             # We can also check if a column like 'Publication Number' or 'Patent Number' exists and use that.
