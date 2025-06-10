@@ -228,7 +228,7 @@ if df_patents is None or patent_embeddings is None:
 
 # --- Section for problem input and search ---
 st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
-st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
+st.markdown("<p class='text-gray-600 mb-6'></p>", unsafe_allow_html=True) # Removed "Describe tu problema técnico o necesidad funcional"
 
 
 # Fixed number of results, no slider
@@ -239,10 +239,10 @@ with st.form(key='search_form', clear_on_submit=False):
     # This is the Streamlit text_area, now visible and primary for input
     # It will be styled with CSS to look like the rounded search bar.
     problem_description = st.text_area(
-        "Describe tu problema técnico o necesidad funcional:",
+        "Describe tu problema técnico o necesidad funcional:", # Label is now the main descriptive text
         value="Necesito soluciones para la gestión eficiente de la producción de miel.",
         height=68, # Required minimum height
-        label_visibility="visible", # We will hide the label with CSS later
+        label_visibility="visible", # Keep label visible to serve as the main description
         key="problem_description_input_area", # Renamed key for clarity
         placeholder="Escribe aquí tu necesidad apícola..." # Added placeholder
     )
