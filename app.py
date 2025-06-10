@@ -53,9 +53,10 @@ st.markdown(
             border: none;
             transition: background-color 0.2s ease;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex; /* Make it flex to center SVG */
+            display: flex; /* Make it flex to center content */
             justify-content: center;
             align-items: center;
+            line-height: 1; /* Adjust line height for better emoji centering */
         }
         .search-button:hover {
             background-color: #1aae89; /* Darker teal on hover */
@@ -149,8 +150,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Laptop icon SVG (used in patent cards)
-# Escaped curly braces {{ }} in the viewBox attribute
+# Magnifying glass emoji (used in search button)
+SEARCH_ICON_EMOJI = "&#128269;" # Magnifying Glass Emoji
+
+# Laptop icon SVG (used in patent cards) - still using the original SVG for the cards
 LAPTOP_ICON_SVG = """
 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm1.454 11.085a.75.75 0 00-.735.434l-.626 1.706a.75.75 0 00.923 1.054l.583-.178h13.375l.583.178a.75.75 0 00.923-1.054l-.626-1.706a.75.75 0 00-.735-.434H4.454z" clip-rule="evenodd" />
@@ -172,7 +175,7 @@ def load_embedding_model():
     return model
 
 @st.cache_data
-def process_patent_data(file_path): # Removed model_instance parameter
+def process_patent_data(file_path):
     """
     Processes the Excel patent file from a local path.
     Reads the file, combines title and summary, and generates the embeddings.
@@ -244,13 +247,13 @@ with st.form(key='search_form', clear_on_submit=False):
     # Initial value for the custom input.
     initial_search_value = "Necesito un sistema de cierre hermético de envases sin usar calor."
 
-    # This creates the visual search bar with an HTML input and a custom SVG button
+    # This creates the visual search bar with an HTML input and a custom button with an emoji
     st.markdown(f"""
         <div class="search-input-container">
             <input type="text" id="problem_description_input" name="problem_description"
                    value="{initial_search_value}" placeholder="Describe tu problema técnico o necesidad funcional">
             <button type="submit" class="search-button">
-                {LAPTOP_ICON_SVG}
+                {SEARCH_ICON_EMOJI}
             </button>
         </div>
         """, unsafe_allow_html=True)
@@ -351,4 +354,3 @@ st.markdown("""
     }
 </script>
 """, unsafe_allow_html=True)
-
