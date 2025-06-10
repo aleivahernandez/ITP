@@ -235,10 +235,6 @@ search_query = st.text_input(
     key="search_input"
 )
 
-# Placeholder for the search button (will be part of the custom HTML input below)
-# The actual button is handled by the overall Streamlit form or st.button below
-# For the visual, we'll create a custom HTML structure for the input + button
-
 # Fixed number of results, no slider
 MAX_RESULTS = 3
 
@@ -313,14 +309,13 @@ with st.form(key='search_form', clear_on_submit=False):
                                     {LAPTOP_ICON_SVG}
                                     <div class="patent-details">
                                         <p class="patent-title">{patent_title}</p>
-                                        <p class="patent-summary text-sm">{patent_summary[:100]}...</p> {/* Truncate summary for card view */}
+                                        <p class="patent-summary text-sm">{patent_summary[:100]}...</p>
                                         <span class="patent-tag {tag_class}">{tag_text}</span>
                                     </div>
                                 </div>
                             """, unsafe_allow_html=True)
                             
                             # For the full summary, use an expander (optional, as the image doesn't show it)
-                            # You can uncomment this if you want to keep the full summary accessible
                             # with st.expander(f"Ver Resumen Completo de '{patent_title}'"):
                             #     st.write(patent_summary)
 
