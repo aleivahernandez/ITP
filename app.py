@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
-from deep_translator import GoogleTranslator # Changed from googletrans.Translator
+from deep_translator import GoogleTranslator
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -158,7 +158,7 @@ def process_patent_data(file_path):
     """
     if file_path:
         try:
-            # Check file extension to read correctly
+            # Determine file type and read accordingly
             if file_path.endswith('.csv'):
                 df = pd.read_csv(file_path)
             elif file_path.endswith('.xlsx'):
@@ -167,23 +167,31 @@ def process_patent_data(file_path):
                 st.error("Formato de archivo no soportado. Por favor, sube un archivo .csv o .xlsx.")
                 return None, None
 
-            # Validate that the necessary columns exist with new names
-            required_columns = ['Title (Original language)', 'Abstract (Original Language)']
-            if not all(col in df.columns for col in required_columns):
-                st.error(f"El archivo debe contener las columnas: {', '.join(required_columns)}. "
-                         "Por favor, revisa que los nombres de las columnas sean exactos.")
+            # Normalize column names: strip spaces and convert to lowercase
+            df.columns = df.columns.str.strip().str.lower()
+
+            # Define required columns after normalization
+            required_columns_normalized = ['title (original language)', 'abstract (original language)']
+            
+            # Check if all required columns exist after normalization
+            if not all(col in df.columns for col in required_columns_normalized):
+                st.error(f"El archivo debe contener las columnas: '{required_columns_normalized[0]}' y '{required_columns_normalized[1]}'. "
+                         "Por favor, revisa que los nombres de las columnas sean exactos (ignorando mayúsculas/minúsculas y espacios extra).")
                 return None, None
 
+            # Access columns using their normalized names
+            original_title_col = 'title (original language)'
+            original_abstract_col = 'abstract (original language)'
+
             # Fill null values with empty strings
-            df['Title (Original language)'] = df['Title (Original language)'].fillna('')
-            df['Abstract (Original language)'] = df['Abstract (Original language)'].fillna('')
+            df[original_title_col] = df[original_title_col].fillna('')
+            df[original_abstract_col] = df[original_abstract_col].fillna('')
 
             st.write("Traduciendo títulos y resúmenes (esto puede tardar un momento si hay muchos)...")
             # Translate titles and abstracts to Spanish
-            df['Titulo Traducido'] = df['Title (Original language)'].apply(lambda x: translate_text(x, 'es'))
-            df['Resumen Traducido'] = df['Abstract (Original language)'].apply(lambda x: translate_text(x, 'es'))
+            df['Titulo Traducido'] = df[original_title_col].apply(lambda x: translate_text(x, 'es'))
+            df['Resumen Traducido'] = df[original_abstract_col].apply(lambda x: translate_text(x, 'es'))
             st.success("Traducción completada.")
-
 
             # Combines the translated title and summary to create a complete patent description
             df['Descripción Completa'] = df['Titulo Traducido'] + ". " + df['Resumen Traducido']
@@ -206,7 +214,7 @@ def process_patent_data(file_path):
 # --- Automatic local Excel file loading section ---
 
 # The name of the local patent file in the same repository
-# Changed to .csv to match the uploaded file
+# User confirmed it's 'patentes.xlsx' (Excel)
 excel_file_name = "patentes.xlsx" 
 
 # Initialize df_patents and patent_embeddings
@@ -220,7 +228,8 @@ with st.spinner(f"Inicializando base de datos de patentes..."):
 if df_patents is None or patent_embeddings is None:
     st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
              "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
-             "y que contenga las columnas 'Title (Original language)' y 'Abstract (Original Language)'.")
+             "y que contenga las columnas 'Title (Original language)' y 'Abstract (Original Language)'. "
+             "Se ignora mayúsculas/minúsculas y espacios extra en los nombres de las columnas.")
     st.stop() # Stop the app if data can't be loaded
 
 # --- Section for problem input and search ---
@@ -274,10 +283,15 @@ with st.form(key='search_form', clear_on_submit=False):
                             
                             # It's possible 'numero de patente' might not exist in the new dataset.
                             # We can also check if a column like 'Publication Number' or 'Patent Number' exists and use that.
-                            patent_number = df_patents.iloc[idx]['numero de patente'] if 'numero de patente' in df_patents.columns else \
-                                            (df_patents.iloc[idx]['Publication Number'] if 'Publication Number' in df_patents.columns else \
-                                            (df_patents.iloc[idx]['Patent Number'] if 'Patent Number' in df_patents.columns else 'N/A'))
-
+                            # Access columns using their normalized names
+                            patent_number_found = 'N/A'
+                            if 'numero de patente' in df_patents.columns:
+                                patent_number_found = df_patents.iloc[idx]['numero de patente']
+                            elif 'publication number' in df_patents.columns: # Check normalized names
+                                patent_number_found = df_patents.iloc[idx]['publication number']
+                            elif 'patent number' in df_patents.columns: # Check normalized names
+                                patent_number_found = df_patents.iloc[idx]['patent number']
+                            
                             # Escape HTML-breaking characters in the content
                             escaped_patent_title = html.escape(patent_title)
                             escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
@@ -288,6 +302,7 @@ with st.form(key='search_form', clear_on_submit=False):
     <div class="patent-details">
         <p class="patent-title">{escaped_patent_title}</p>
         <p class="patent-summary text-sm">{escaped_patent_summary_short}</p>
+        <p class="text-xs text-gray-500 mt-2">Patente: {patent_number_found}</p>
     </div>
 </div>
 """
