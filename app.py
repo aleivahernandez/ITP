@@ -4,7 +4,6 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
-# Removed: from deep_translator import GoogleTranslator
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -39,6 +38,7 @@ st.markdown(
             margin-bottom: 1rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative; /* Needed for absolute positioning of similarity score */
         }
         .patent-card:hover {
             transform: translateY(-3px);
@@ -64,7 +64,18 @@ st.markdown(
             font-size: 0.95rem; /* text-base */
             color: #4b5563; /* Gray-700 */
         }
-        /* Removed patent-tag specific styles as the element is removed */
+        .similarity-score {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: #e0f2f7; /* Light blue background to contrast */
+            color: #20c997; /* Teal color */
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 10; /* Ensure it's on top */
+        }
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
@@ -129,9 +140,6 @@ def load_embedding_model():
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
         st.success("Modelo de embeddings cargado correctamente.")
     return model
-
-# Removed: @st.cache_resource and get_translator()
-# Removed: translate_text function
 
 @st.cache_data
 def process_patent_data(file_path):
@@ -285,6 +293,7 @@ with st.form(key='search_form', clear_on_submit=False):
 
                             card_html = f"""
 <div class="patent-card">
+    <div class="similarity-score">Similitud: {score:.2%}</div>
     <div class="patent-icon">{MAGNIFYING_GLASS_SVG}</div>
     <div class="patent-details">
         <p class="patent-title">{escaped_patent_title}</p>
