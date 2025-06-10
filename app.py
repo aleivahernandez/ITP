@@ -296,7 +296,7 @@ with st.form(key='search_form', clear_on_submit=False):
                                         <span class="patent-tag {tag_class}">{tag_text}</span>
                                     </div>
                                 </div>
-                            """, unsafe_allow_html=True)
+                            """, unsafe_allow_html=True) # <<< ADDED unsafe_allow_html=True here
                             
                             # For the full summary, use an expander (optional, as the image doesn't show it)
                             # with st.expander(f"Ver Resumen Completo de '{patent_title}'"):
@@ -306,4 +306,3 @@ with st.form(key='search_form', clear_on_submit=False):
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
 # Removed the JavaScript section as it's no longer needed for syncing custom HTML input
-
