@@ -27,38 +27,7 @@ st.markdown(
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Soft shadow */
             padding: 2.5rem; /* Padding inside the app container */
         }
-        .search-input-container {
-            display: flex;
-            align-items: center;
-            border: 2px solid #20c997; /* Teal border */
-            border-radius: 9999px; /* Fully rounded */
-            padding: 0.5rem 1rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        .search-input-container input {
-            flex-grow: 1;
-            border: none;
-            outline: none;
-            font-size: 1.125rem; /* text-lg */
-            padding: 0.5rem 0.75rem;
-            background: transparent;
-        }
-        .search-button-div { /* Changed from .search-button to .search-button-div */
-            background-color: #20c997; /* Teal background */
-            color: white;
-            border-radius: 9999px; /* Fully rounded */
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex; /* Make it flex to center content */
-            justify-content: center;
-            align-items: center;
-        }
-        .search-button-div:hover { /* Changed from .search-button to .search-button-div */
-            background-color: #1aae89; /* Darker teal on hover */
-        }
+        /* Removed custom search input container and button styles as they are no longer used */
         .patent-card {
             display: flex;
             align-items: flex-start;
@@ -98,35 +67,41 @@ st.markdown(
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
-        /* --- CSS para ocultar completamente componentes nativos de Streamlit --- */
-        /* Oculta los contenedores principales de st.text_area y st.form_submit_button */
-        div[data-testid="stForm"] div[data-testid^="stVerticalBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"],
-        div[data-testid="stForm"] div[data-testid^="stVerticalBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"],
-        div[data-testid="stForm"] div[data-testid^="stVerticalBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"] * {
-            display: none !important;
-            height: 0 !important;
-            width: 0 !important;
-            overflow: hidden !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
+        /* --- CSS para estilizar componentes nativos de Streamlit --- */
+        /* Estiliza el st.text_area para parecerse al input de la imagen */
+        textarea[aria-label="Describe tu problema técnico o necesidad funcional:"] {
+            border-radius: 9999px !important; /* Fully rounded */
+            border: 2px solid #20c997 !important; /* Teal border */
+            padding: 0.5rem 1.5rem !important; /* Adjust padding */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+            font-size: 1.125rem !important; /* text-lg */
+            margin-bottom: 1rem; /* Space below the input */
+            resize: none !important; /* Prevent manual resizing */
         }
-        /* Oculta el st.form_submit_button y sus descendientes */
-        button[data-testid="stFormSubmitButton"],
-        button[data-testid="stFormSubmitButton"] * {
-            display: none !important;
-            height: 0 !important;
-            width: 0 !important;
-            overflow: hidden !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
+        /* Estiliza el botón de envío del formulario */
+        button[data-testid="stFormSubmitButton"] {
+            background-color: #20c997 !important;
+            color: white !important;
+            border-radius: 0.75rem !important; /* Rounded corners */
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            transition: background-color 0.2s ease !important;
+            display: block !important; /* Make it a block element */
+            margin: 0 auto 2rem auto !important; /* Center the button and add margin below */
+            width: fit-content; /* Adjust width to content */
         }
-
+        button[data-testid="stFormSubmitButton"]:hover {
+            background-color: #1aae89 !important;
+        }
         /* Ajustes de estilos para los elementos de texto estándar de Streamlit, si aparecen */
         .st-emotion-cache-16idsys p, /* Ajusta el tamaño de fuente predeterminado para st.markdown */
         .st-emotion-cache-1s2a8v p { /* Ajusta el tamaño de fuente para `p` en `st.markdown` para versiones anteriores */
             font-size: 1rem;
+        }
+        /* Ocultar el label del text_area si no queremos que aparezca */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] {
+            display: none !important;
         }
     </style>
     """,
@@ -139,6 +114,12 @@ MAGNIFYING_GLASS_SVG = """
     <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
 </svg>
 """
+# Laptop icon SVG (if you want a laptop icon in cards instead of magnifying glass)
+# LAPTOP_ICON_SVG = """
+# <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+#     <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm1.454 11.085a.75.75 0 00-.735.434l-.626 1.706a.75.75 0 00.923 1.054l.583-.178h13.375l.583.178a.75.75 0 00.923-1.054l-.626-1.706a.75.75 0 00-.735-.434H4.454z" clip-rule="evenodd" />
+# </svg>
+# """
 
 # --- Functions for loading and processing data/models ---
 
@@ -224,38 +205,24 @@ MAX_RESULTS = 3
 
 # Use a form to capture the text input and button press together for better UX
 with st.form(key='search_form', clear_on_submit=False):
-    # Initial value for the custom input.
-    initial_search_value = "Necesito soluciones para la gestión eficiente de la producción de miel."
-
-    # This creates the visual search bar with an HTML input and a custom SVG-based clickable div
-    st.markdown(f"""
-        <div class="search-input-container">
-            <input type="text" id="problem_description_input" name="problem_description"
-                   value="{initial_search_value}" placeholder="Escribe aquí tu necesidad apícola...">
-            <div id="custom_search_button" class="search-button-div">
-                {MAGNIFYING_GLASS_SVG}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # These Streamlit widgets are present only for functionality.
-    # They are completely hidden by CSS rules.
-    # The label has a data-testid assigned by Streamlit and for^="textarea"
-    problem_description_from_form = st.text_area(
-        "Hidden input for problem description", # Label, though hidden
-        value=initial_search_value, # Initial value
+    # This is the Streamlit text_area, now visible and primary for input
+    # It will be styled with CSS to look like the rounded search bar.
+    problem_description = st.text_area(
+        "Describe tu problema técnico o necesidad funcional:",
+        value="Necesito soluciones para la gestión eficiente de la producción de miel.",
         height=68, # Required minimum height
-        label_visibility="hidden", # Hide the label
-        key="form_problem_description", # Key for internal Streamlit tracking
-        placeholder="Este campo está oculto.", # Placeholder, won't be seen
-        help="Este campo es solo para la lógica interna y está oculto visualmente." # Help text, also hidden
+        label_visibility="visible", # We will hide the label with CSS later
+        key="problem_description_input_area", # Renamed key for clarity
+        placeholder="Escribe aquí tu necesidad apícola..." # Added placeholder
     )
     
+    # This is the Streamlit form submit button.
+    # We can try to style it to include the magnifying glass icon or keep it simple.
     submitted = st.form_submit_button("Buscar Soluciones", type="primary")
 
-    # If the form is submitted via the custom HTML button (which triggers st.form_submit_button)
+    # If the form is submitted
     if submitted:
-        current_problem_description = problem_description_from_form.strip() # Get value from hidden text_area
+        current_problem_description = problem_description.strip() # Direct access to text_area value
 
         if not current_problem_description:
             st.warning("Por favor, ingresa una descripción del problema.")
@@ -296,38 +263,4 @@ with st.form(key='search_form', clear_on_submit=False):
                 except Exception as e:
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
-# This JavaScript ensures that when the custom HTML input changes, the Streamlit text_area also updates.
-# This makes the form_submit_button work correctly with the custom input's value.
-st.markdown("""
-<script>
-    const customInput = document.getElementById('problem_description_input');
-    const streamlitTextArea = document.querySelector('textarea[aria-label="Hidden input for problem description"]');
-    const submitButton = document.querySelector('button[data-testid="stFormSubmitButton"]'); // Native submit button
-    const customSearchButton = document.getElementById('custom_search_button'); // The custom div button
-
-    if (customInput && streamlitTextArea && submitButton && customSearchButton) {
-        // Set initial value for Streamlit text_area from custom input
-        streamlitTextArea.value = customInput.value;
-        streamlitTextArea.dispatchEvent(new Event('input', { bubbles: true }));
-
-        customInput.addEventListener('input', (event) => {
-            streamlitTextArea.value = event.target.value;
-            streamlitTextArea.dispatchEvent(new Event('input', { bubbles: true }));
-        });
-
-        // Trigger form submission if Enter key is pressed in the custom input
-        customInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent default form submission
-                submitButton.click(); // Programmatically click the hidden Streamlit submit button
-            }
-        });
-
-        // Ensure the custom div button also triggers the hidden Streamlit submit button
-        customSearchButton.addEventListener('click', (event) => {
-            event.preventDefault(); // Prevent default behavior of custom div
-            submitButton.click(); // Programmatically click the hidden Streamlit submit button
-        });
-    }
-</script>
-""", unsafe_allow_html=True)
+# No custom JavaScript for syncing is needed now.
