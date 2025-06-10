@@ -261,7 +261,7 @@ with st.form(key='search_form', clear_on_submit=False):
     problem_description_from_form = st.text_area(
         "Ingresa la descripción de tu problema técnico o necesidad funcional:",
         value=search_query, # Use the initial value from the custom search_query
-        height=1, # Make it very small
+        height=68, # Corrected minimum height as per Streamlit's requirement
         label_visibility="hidden",
         key="form_problem_description"
     )
