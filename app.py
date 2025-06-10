@@ -23,7 +23,7 @@ st.markdown(
             max-width: 800px; /* Constrain the app width */
             margin: 2rem auto; /* Center the app on the page */
             background-color: #ffffff; /* White background for the app container */
-            border-radius: 1.5rem; /* Rounded corners */
+            border-radius: 1.5rem; /* Rounded Corners */
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Soft shadow */
             padding: 2.5rem; /* Padding inside the app container */
         }
@@ -63,21 +63,7 @@ st.markdown(
             font-size: 0.95rem; /* text-base */
             color: #4b5563; /* Gray-700 */
         }
-        .patent-tag {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-            margin-top: 0.75rem;
-            color: #ffffff;
-        }
-        .tag-available {
-            background-color: #10b981; /* Green-500 */
-        }
-        .tag-protected {
-            background-color: #f59e0b; /* Amber-500 */
-        }
+        /* Removed patent-tag specific styles as the element is removed */
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
@@ -205,7 +191,8 @@ if df_patents is None or patent_embeddings is None:
 
 # --- Section for problem input and search ---
 st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
-st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
+# Updated instruction for a more generic apiculture query
+st.markdown("<p class='text-gray-600 mb-6'>Describe tu necesidad o desafío relacionado con la apicultura.</p>", unsafe_allow_html=True)
 
 
 # Fixed number of results, no slider
@@ -214,13 +201,14 @@ MAX_RESULTS = 3
 # Use a form to capture the text input and button press together for better UX
 with st.form(key='search_form', clear_on_submit=False):
     # This is the Streamlit text_area, now visible and primary for input
+    # Updated initial value for a more generic apiculture need
     problem_description = st.text_area(
         "Describe tu problema técnico o necesidad funcional:",
-        value="Necesito un sistema de cierre hermético de envases sin usar calor.",
+        value="Necesito soluciones para la gestión eficiente de la producción de miel.",
         height=68, # Required minimum height
         label_visibility="visible", # Ensure label is visible
         key="problem_description_input_area", # Renamed key for clarity
-        placeholder="Escribe aquí tu problema técnico..." # Added placeholder
+        placeholder="Escribe aquí tu necesidad apícola, por ejemplo: 'Métodos para la detección temprana de enfermedades en abejas'." # Added apiculture-specific placeholder
     )
     
     # This is the Streamlit form submit button, now visible and primary for submission
@@ -251,9 +239,8 @@ with st.form(key='search_form', clear_on_submit=False):
                             
                             patent_number = df_patents.iloc[idx]['numero de patente'] if 'numero de patente' in df_patents.columns else 'N/A'
 
-                            tag_text = "Disponible para uso" if i % 2 == 0 else "Protección vigente"
-                            tag_class = "tag-available" if i % 2 == 0 else "tag-protected"
-
+                            # Removed tag_text and tag_class assignments
+                            
                             # Escape HTML-breaking characters in the content
                             escaped_patent_title = html.escape(patent_title)
                             escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
@@ -264,14 +251,10 @@ with st.form(key='search_form', clear_on_submit=False):
     <div class="patent-details">
         <p class="patent-title">{escaped_patent_title}</p>
         <p class="patent-summary text-sm">{escaped_patent_summary_short}</p>
-        <span class="patent-tag {tag_class}">{tag_text}</span>
-    </div>
+        </div>
 </div>
 """
                             st.markdown(card_html, unsafe_allow_html=True)
                             
                 except Exception as e:
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
-
-# Removed the JavaScript section as it's no longer needed for syncing custom HTML input
-
