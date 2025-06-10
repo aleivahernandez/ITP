@@ -100,8 +100,10 @@ st.markdown(
             border-top-color: #20c997 !important;
         }
         /* --- CSS para ocultar completamente componentes nativos de Streamlit --- */
-        /* Oculta el contenedor principal del st.text_area */
-        div[data-testid="stTextArea"].st-emotion-cache-1gysd4a { /* Use a specific Streamlit class if available */
+        /* Oculta el contenedor del st.text_area y sus descendientes */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"],
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"],
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"] * {
             display: none !important;
             height: 0 !important;
             width: 0 !important;
@@ -110,12 +112,9 @@ st.markdown(
             margin: 0 !important;
             border: none !important;
         }
-        /* Oculta la etiqueta del st.text_area */
-        label[data-testid="stWidgetLabel"]:has( + div[data-testid="stTextArea"]) {
-            display: none !important;
-        }
-        /* Oculta completamente el st.form_submit_button */
-        button[data-testid="stFormSubmitButton"] {
+        /* Oculta el st.form_submit_button y sus descendientes */
+        button[data-testid="stFormSubmitButton"],
+        button[data-testid="stFormSubmitButton"] * {
             display: none !important;
             height: 0 !important;
             width: 0 !important;
