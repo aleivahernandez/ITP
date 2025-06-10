@@ -3,6 +3,7 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
+import html # Added this import
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -247,6 +248,7 @@ with st.form(key='search_form', clear_on_submit=False):
     )
     
     # This is the Streamlit form submit button, now visible and primary for submission
+    # We will style this to look like the search icon from the image
     submitted = st.form_submit_button("Buscar Soluciones", type="primary")
 
     # If the form is submitted
@@ -287,16 +289,22 @@ with st.form(key='search_form', clear_on_submit=False):
                             tag_text = "Disponible para uso" if i % 2 == 0 else "Protección vigente"
                             tag_class = "tag-available" if i % 2 == 0 else "tag-protected"
 
-                            st.markdown(f"""
-                                <div class="patent-card">
-                                    {LAPTOP_ICON_SVG}
-                                    <div class="patent-details">
-                                        <p class="patent-title">{patent_title}</p>
-                                        <p class="patent-summary text-sm">{patent_summary[:100]}...</p>
-                                        <span class="patent-tag {tag_class}">{tag_text}</span>
-                                    </div>
-                                </div>
-                            """, unsafe_allow_html=True) # <<< ADDED unsafe_allow_html=True here
+                            # Escape HTML-breaking characters in the content
+                            escaped_patent_title = html.escape(patent_title)
+                            escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
+
+                            # Construct the HTML content for the card
+                            card_html = f"""
+<div class="patent-card">
+    {LAPTOP_ICON_SVG}
+    <div class="patent-details">
+        <p class="patent-title">{escaped_patent_title}</p>
+        <p class="patent-summary text-sm">{escaped_patent_summary_short}</p>
+        <span class="patent-tag {tag_class}">{tag_text}</span>
+    </div>
+</div>
+"""
+                            st.markdown(card_html, unsafe_allow_html=True)
                             
                             # For the full summary, use an expander (optional, as the image doesn't show it)
                             # with st.expander(f"Ver Resumen Completo de '{patent_title}'"):
@@ -306,3 +314,4 @@ with st.form(key='search_form', clear_on_submit=False):
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
 # Removed the JavaScript section as it's no longer needed for syncing custom HTML input
+
