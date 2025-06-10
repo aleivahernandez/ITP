@@ -150,6 +150,7 @@ st.markdown(
 )
 
 # Laptop icon SVG (used in patent cards)
+# Escaped curly braces {{ }} in the viewBox attribute
 LAPTOP_ICON_SVG = """
 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm1.454 11.085a.75.75 0 00-.735.434l-.626 1.706a.75.75 0 00.923 1.054l.583-.178h13.375l.583.178a.75.75 0 00.923-1.054l-.626-1.706a.75.75 0 00-.735-.434H4.454z" clip-rule="evenodd" />
@@ -171,7 +172,7 @@ def load_embedding_model():
     return model
 
 @st.cache_data
-def process_patent_data(file_path):
+def process_patent_data(file_path): # Removed model_instance parameter
     """
     Processes the Excel patent file from a local path.
     Reads the file, combines title and summary, and generates the embeddings.
@@ -249,7 +250,7 @@ with st.form(key='search_form', clear_on_submit=False):
             <input type="text" id="problem_description_input" name="problem_description"
                    value="{initial_search_value}" placeholder="Describe tu problema técnico o necesidad funcional">
             <button type="submit" class="search-button">
-                {LAPTOP_ICON_SVG} {/* Use the SVG for the search icon */}
+                {LAPTOP_ICON_SVG}
             </button>
         </div>
         """, unsafe_allow_html=True)
@@ -350,3 +351,4 @@ st.markdown("""
     }
 </script>
 """, unsafe_allow_html=True)
+
