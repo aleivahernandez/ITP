@@ -19,7 +19,7 @@ def load_embedding_model():
     mejorando el rendimiento de la aplicación.
     """
     # Modelo multilingüe que funciona bien para español y semantic similarity
-    # Otros modelos posibles: 'distiluse-base-multilingual-cased-v1'
+    # Otros modelos posibles: 'distiluse-base-multilingu al-cased-v1'
     # Consulta: https://www.sbert.net/docs/pretrained_models.html
     st.write("Cargando el modelo de embeddings (esto puede tardar un momento)...")
     model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
@@ -27,17 +27,17 @@ def load_embedding_model():
     return model
 
 @st.cache_data
-def process_patent_data(file_path_or_url):
+def process_patent_data(file_path):
     """
-    Procesa el archivo Excel de patentes desde una ruta local o una URL.
+    Procesa el archivo Excel de patentes desde una ruta local.
     Lee el archivo, combina título y resumen, y genera los embeddings.
     Se utiliza `st.cache_data` para almacenar en caché los datos procesados
     y los embeddings generados, evitando reprocesamientos innecesarios.
     """
-    if file_path_or_url:
+    if file_path:
         try:
-            # Lee el archivo Excel desde la URL o ruta
-            df = pd.read_excel(file_path_or_url)
+            # Lee el archivo Excel desde la ruta local
+            df = pd.read_excel(file_path)
 
             # Validar que las columnas necesarias existan (ahora en minúsculas)
             required_columns = ['titulo', 'resumen']
@@ -60,21 +60,19 @@ def process_patent_data(file_path_or_url):
             corpus_embeddings = model.encode(df['Descripción Completa'].tolist(), convert_to_tensor=True)
             st.success(f"Embeddings generados para {len(df)} patentes.")
             return df, corpus_embeddings
+        except FileNotFoundError:
+            st.error(f"Error: El archivo '{file_path}' no se encontró. Asegúrate de que está en la misma carpeta que 'app.py' en tu repositorio de GitHub.")
+            return None, None
         except Exception as e:
-            st.error(f"Error al procesar el archivo Excel desde '{file_path_or_url}': {e}")
+            st.error(f"Error al procesar el archivo Excel desde '{file_path}': {e}")
             return None, None
     return None, None
 
-# --- Sección para la carga automática del archivo Excel desde GitHub ---
-st.header("1. Patentes cargadas desde GitHub")
+# --- Sección para la carga automática del archivo Excel local ---
+st.header("1. Patentes cargadas")
 
-# URL de tu archivo Excel en GitHub (debe ser la URL "raw")
-# IMPORTANTE: Reemplaza esta URL con la URL "raw" de tu propio archivo Excel en GitHub.
-# Ejemplo de cómo obtener la URL raw:
-# 1. Navega a tu archivo Excel en GitHub.
-# 2. Haz clic en el botón "Raw".
-# 3. Copia la URL de la página que se abre.
-github_excel_url = "https://raw.githubusercontent.com/tu-usuario/tu-repositorio/main/tu_archivo_de_patentes.xlsx" # ¡CAMBIA ESTA URL!
+# El nombre del archivo Excel local en el mismo repositorio
+excel_file_name = "patentes.xlsx"
 
 # Inicializar model y corpus_embeddings
 model = None
@@ -82,16 +80,17 @@ df_patents = None
 patent_embeddings = None
 
 # Procesa los datos automáticamente al iniciar la aplicación
-with st.spinner("Cargando y procesando patentes desde GitHub..."):
-    df_patents, patent_embeddings = process_patent_data(github_excel_url)
+with st.spinner(f"Cargando y procesando patentes desde '{excel_file_name}'..."):
+    df_patents, patent_embeddings = process_patent_data(excel_file_name)
 
 if df_patents is not None and patent_embeddings is not None:
     model = load_embedding_model()
-    st.success(f"Archivo cargado y {len(df_patents)} patentes procesadas desde GitHub.")
+    st.success(f"Archivo '{excel_file_name}' cargado y {len(df_patents)} patentes procesadas.")
     st.dataframe(df_patents[['titulo', 'resumen']].head()) # Muestra las primeras filas para verificación
 else:
-    st.error(f"No se pudo cargar o procesar el archivo Excel desde la URL: {github_excel_url}. "
-             "Por favor, verifica la URL y que el archivo exista y sea accesible públicamente.")
+    st.error(f"No se pudo cargar o procesar el archivo Excel '{excel_file_name}'. "
+             "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
+             "y que contenga las columnas 'titulo' y 'resumen'.")
 
 
 # --- Sección para la entrada de la problemática y búsqueda ---
