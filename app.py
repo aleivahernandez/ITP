@@ -99,8 +99,23 @@ st.markdown(
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
-        /* --- CSS para ocultar completamente el div de widgets ocultos --- */
-        #hidden_streamlit_widgets {
+        /* --- CSS para ocultar completamente componentes nativos de Streamlit --- */
+        /* Oculta el contenedor principal del st.text_area */
+        div[data-testid="stTextArea"].st-emotion-cache-1gysd4a { /* Use a specific Streamlit class if available */
+            display: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+        /* Oculta la etiqueta del st.text_area */
+        label[data-testid="stWidgetLabel"]:has( + div[data-testid="stTextArea"]) {
+            display: none !important;
+        }
+        /* Oculta completamente el st.form_submit_button */
+        button[data-testid="stFormSubmitButton"] {
             display: none !important;
             height: 0 !important;
             width: 0 !important;
@@ -226,25 +241,19 @@ with st.form(key='search_form', clear_on_submit=False):
         </div>
         """, unsafe_allow_html=True)
     
-    # This div will contain the hidden Streamlit widgets
-    st.markdown("<div id='hidden_streamlit_widgets'>", unsafe_allow_html=True)
-    
-    # This Streamlit text_area is present only to capture the value for the form submission.
-    # It is completely hidden by CSS rules applied to #hidden_streamlit_widgets.
+    # These Streamlit widgets are present only for functionality.
+    # They are completely hidden by CSS rules.
     problem_description_from_form = st.text_area(
         "Hidden input for problem description", # Label, though hidden
         value=initial_search_value, # Initial value
         height=68, # Required minimum height
         label_visibility="hidden", # Hide the label
         key="form_problem_description", # Key for internal Streamlit tracking
-        placeholder="Este campo está oculto." # Placeholder, won't be seen
+        placeholder="Este campo está oculto.", # Placeholder, won't be seen
+        help="Este campo es solo para la lógica interna y está oculto visualmente." # Help text, also hidden
     )
     
-    # This st.form_submit_button is also present only for functionality.
-    # It is completely hidden by CSS rules applied to #hidden_streamlit_widgets.
     submitted = st.form_submit_button("Buscar Soluciones", type="primary")
-
-    st.markdown("</div>", unsafe_allow_html=True) # Close the hidden widgets div
 
     # If the form is submitted via the custom HTML button (which triggers st.form_submit_button)
     if submitted:
