@@ -44,20 +44,19 @@ st.markdown(
             padding: 0.5rem 0.75rem;
             background: transparent;
         }
-        .search-button {
+        .search-button-div { /* Changed from .search-button to .search-button-div */
             background-color: #20c997; /* Teal background */
             color: white;
             border-radius: 9999px; /* Fully rounded */
             padding: 0.75rem 1rem;
             cursor: pointer;
-            border: none;
             transition: background-color 0.2s ease;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             display: flex; /* Make it flex to center content */
             justify-content: center;
             align-items: center;
         }
-        .search-button:hover {
+        .search-button-div:hover { /* Changed from .search-button to .search-button-div */
             background-color: #1aae89; /* Darker teal on hover */
         }
         .patent-card {
@@ -100,10 +99,10 @@ st.markdown(
             border-top-color: #20c997 !important;
         }
         /* --- CSS para ocultar completamente componentes nativos de Streamlit --- */
-        /* Oculta el contenedor del st.text_area y sus descendientes */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"],
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"],
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"] * {
+        /* Oculta los contenedores principales de st.text_area y st.form_submit_button */
+        div[data-testid="stForm"] div[data-testid^="stVerticalBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"],
+        div[data-testid="stForm"] div[data-testid^="stVerticalBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"],
+        div[data-testid="stForm"] div[data-testid^="stVerticalBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"] * {
             display: none !important;
             height: 0 !important;
             width: 0 !important;
@@ -134,9 +133,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Laptop icon SVG (used in patent cards and now in search button)
-# Escaped curly braces {{ }} in the viewBox attribute
-LAPTOP_ICON_SVG = """
+# Magnifying glass SVG (used in search button and patent cards)
+MAGNIFYING_GLASS_SVG = """
 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
 </svg>
@@ -229,19 +227,20 @@ with st.form(key='search_form', clear_on_submit=False):
     # Initial value for the custom input.
     initial_search_value = "Necesito soluciones para la gestión eficiente de la producción de miel."
 
-    # This creates the visual search bar with an HTML input and a custom SVG button
+    # This creates the visual search bar with an HTML input and a custom SVG-based clickable div
     st.markdown(f"""
         <div class="search-input-container">
             <input type="text" id="problem_description_input" name="problem_description"
                    value="{initial_search_value}" placeholder="Escribe aquí tu necesidad apícola...">
-            <button type="submit" class="search-button">
-                {LAPTOP_ICON_SVG}
-            </button>
+            <div id="custom_search_button" class="search-button-div">
+                {MAGNIFYING_GLASS_SVG}
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
     # These Streamlit widgets are present only for functionality.
     # They are completely hidden by CSS rules.
+    # The label has a data-testid assigned by Streamlit and for^="textarea"
     problem_description_from_form = st.text_area(
         "Hidden input for problem description", # Label, though hidden
         value=initial_search_value, # Initial value
@@ -285,7 +284,7 @@ with st.form(key='search_form', clear_on_submit=False):
 
                             card_html = f"""
 <div class="patent-card">
-    <div class="patent-icon">{LAPTOP_ICON_SVG}</div>
+    <div class="patent-icon">{MAGNIFYING_GLASS_SVG}</div> {/* Changed to MAGNIFYING_GLASS_SVG for patent icon too if desired */}
     <div class="patent-details">
         <p class="patent-title">{escaped_patent_title}</p>
         <p class="patent-summary text-sm">{escaped_patent_summary_short}</p>
@@ -304,8 +303,9 @@ st.markdown("""
     const customInput = document.getElementById('problem_description_input');
     const streamlitTextArea = document.querySelector('textarea[aria-label="Hidden input for problem description"]');
     const submitButton = document.querySelector('button[data-testid="stFormSubmitButton"]'); // Native submit button
+    const customSearchButton = document.getElementById('custom_search_button'); // The custom div button
 
-    if (customInput && streamlitTextArea && submitButton) {
+    if (customInput && streamlitTextArea && submitButton && customSearchButton) {
         // Set initial value for Streamlit text_area from custom input
         streamlitTextArea.value = customInput.value;
         streamlitTextArea.dispatchEvent(new Event('input', { bubbles: true }));
@@ -323,14 +323,11 @@ st.markdown("""
             }
         });
 
-        // Ensure the custom button also triggers the hidden Streamlit submit button
-        const customSubmitButton = customInput.nextElementSibling; // The button in search-input-container
-        if (customSubmitButton && customSubmitButton.tagName === 'BUTTON') {
-            customSubmitButton.addEventListener('click', (event) => {
-                event.preventDefault(); // Prevent default behavior of custom button
-                submitButton.click(); // Programmatically click the hidden Streamlit submit button
-            });
-        }
+        // Ensure the custom div button also triggers the hidden Streamlit submit button
+        customSearchButton.addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent default behavior of custom div
+            submitButton.click(); // Programmatically click the hidden Streamlit submit button
+        });
     }
 </script>
 """, unsafe_allow_html=True)
