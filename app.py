@@ -26,36 +26,7 @@ st.markdown(
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Soft shadow */
             padding: 2.5rem; /* Padding inside the app container */
         }
-        .search-input-container {
-            display: flex;
-            align-items: center;
-            border: 2px solid #20c997; /* Teal border */
-            border-radius: 9999px; /* Fully rounded */
-            padding: 0.5rem 1rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        .search-input-container input {
-            flex-grow: 1;
-            border: none;
-            outline: none;
-            font-size: 1.125rem; /* text-lg */
-            padding: 0.5rem 0.75rem;
-            background: transparent;
-        }
-        .search-button {
-            background-color: #20c997; /* Teal background */
-            color: white;
-            border-radius: 9999px; /* Fully rounded */
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            border: none;
-            transition: background-color 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .search-button:hover {
-            background-color: #1aae89; /* Darker teal on hover */
-        }
+        /* Removed .search-input-container and .search-button CSS as they are no longer used */
         .patent-card {
             display: flex;
             align-items: flex-start;
@@ -109,48 +80,62 @@ st.markdown(
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
-        /* Hide the Streamlit text_area and its container within the form */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] + div > div > textarea[aria-label="Hidden input for problem description"],
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] + div > div > textarea[aria-label="Hidden input for problem description"] + div,
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] + div, /* Target the direct parent of textarea input */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] /* Target the label itself */
-        {
-            display: none !important;
-            height: 0 !important;
-            width: 0 !important;
-            overflow: hidden !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
+        /* Adjust standard Streamlit text area styling */
+        textarea[aria-label="Describe tu problema técnico o necesidad funcional:"],
+        textarea[aria-label="Ingresa la descripción de tu problema técnico o necesidad funcional:"] {
+            border-radius: 0.75rem !important; /* rounded-xl */
+            border: 1px solid #d1d5db !important;
+            padding: 0.75rem !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
         }
-        /* Hide the Streamlit form submit button */
-        div[data-testid="stForm"] button[data-testid="stFormSubmitButton"] {
-            display: none !important;
-            height: 0 !important;
-            width: 0 !important;
-            overflow: hidden !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
+        /* Adjust standard Streamlit button styling */
+        button[data-testid="stFormSubmitButton"] {
+            background-color: #20c997 !important;
+            color: white !important;
+            border-radius: 0.75rem !important; /* rounded-xl */
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            transition: background-color 0.2s ease !important;
         }
-        .st-emotion-cache-10o5u3h { /* Adjust button styling */
-            background-color: #20c997;
-            color: white;
-            border-radius: 0.75rem;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.2s ease;
+        button[data-testid="stFormSubmitButton"]:hover {
+            background-color: #1aae89 !important;
         }
-        .st-emotion-cache-10o5u3h:hover {
-            background-color: #1aae89;
-        }
-        .st-emotion-cache-16idsys p { /* Adjust default paragraph font size */
+        .st-emotion-cache-16idsys p, /* Adjust default paragraph font size for st.markdown */
+        .st-emotion-cache-1s2a8v p { /* Adjust `st.markdown` `p` tag font size for older versions */
             font-size: 1rem;
         }
-        .st-emotion-cache-1s2a8v p { /* Adjust `st.markdown` `p` tag font size */
-            font-size: 1rem;
+        /* Additional CSS to make the st.text_area resemble the image input field if possible */
+        div.st-emotion-cache-1gysd4a { /* Container for text_area */
+            border: 2px solid #20c997; /* Teal border */
+            border-radius: 9999px; /* Fully rounded */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 0.5rem 1rem; /* Adjust padding to match the image's input */
+            margin-bottom: 2rem; /* Spacing below the input */
+            display: flex; /* Use flex to align content inside */
+            align-items: center; /* Center vertically */
         }
+        div.st-emotion-cache-1gysd4a textarea { /* The textarea inside the container */
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            padding: 0 !important; /* Remove internal padding if container has it */
+            margin: 0 !important; /* Remove internal margin */
+            font-size: 1.125rem; /* text-lg */
+            flex-grow: 1; /* Make it take available space */
+            background: transparent !important;
+            resize: none; /* Prevent manual resizing by user */
+        }
+        /* Hide default Streamlit text area label if needed after custom CSS */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] {
+            display: none !important;
+        }
+        /* Adjust form submit button alignment if needed */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid="stFormSubmitButton"] {
+            display: block; /* Ensure it's a block element */
+            margin: 0 auto; /* Center the button */
+        }
+
     </style>
     """,
     unsafe_allow_html=True
@@ -245,39 +230,22 @@ MAX_RESULTS = 3
 
 # Use a form to capture the text input and button press together for better UX
 with st.form(key='search_form', clear_on_submit=False):
-    # This creates the visual search bar
-    # Initial value for the custom input. This will be updated by the user and by JS
-    initial_search_value = "Necesito un sistema de cierre hermético de envases sin usar calor."
-
-    st.markdown(f"""
-        <div class="search-input-container">
-            <input type="text" id="problem_description_input" name="problem_description"
-                   value="{initial_search_value}" placeholder="Describe tu problema técnico o necesidad funcional">
-            <button type="submit" class="search-button">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6">
-                    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
-                </svg>
-            </button>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # This Streamlit text_area is present only to capture the value for the form submission.
-    # It is made invisible by the CSS rules defined at the top.
-    problem_description_from_form = st.text_area(
-        "Hidden input for problem description", # Label, though hidden
-        value=initial_search_value, # Initial value
-        height=68, # Required minimum height for st.text_area
-        label_visibility="hidden",
-        key="form_problem_description"
+    # This is the Streamlit text_area, now visible and primary for input
+    problem_description = st.text_area(
+        "Describe tu problema técnico o necesidad funcional:",
+        value="Necesito un sistema de cierre hermético de envases sin usar calor.",
+        height=68, # Required minimum height
+        label_visibility="visible", # Ensure label is visible
+        key="problem_description_input_area", # Renamed key for clarity
+        placeholder="Escribe aquí tu problema técnico..." # Added placeholder
     )
     
-    # Submit button for the form (hidden, as the custom HTML button is used)
-    submitted = st.form_submit_button("Buscar Soluciones", help="Presiona Enter o haz click en la lupa para buscar", type="primary")
+    # This is the Streamlit form submit button, now visible and primary for submission
+    submitted = st.form_submit_button("Buscar Soluciones", type="primary")
 
-    # If the form is submitted via the custom button (which triggers form_submit_button)
+    # If the form is submitted
     if submitted:
-        # Use the value from the hidden text area which should have been populated by the user's input
-        current_problem_description = problem_description_from_form.strip()
+        current_problem_description = problem_description.strip() # Direct access to text_area value
 
         if not current_problem_description:
             st.warning("Por favor, ingresa una descripción del problema.")
@@ -327,24 +295,4 @@ with st.form(key='search_form', clear_on_submit=False):
                 except Exception as e:
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
-# This script ensures that when the custom HTML input changes, the Streamlit text_area also updates.
-# This makes the form_submit_button work correctly with the custom input's value.
-st.markdown("""
-<script>
-    const customInput = document.getElementById('problem_description_input');
-    // Find the Streamlit text_area itself. Streamlit adds a specific data-testid or aria-label
-    const streamlitTextArea = document.querySelector('textarea[aria-label="Hidden input for problem description"]');
-
-    if (customInput && streamlitTextArea) {
-        customInput.addEventListener('input', (event) => {
-            streamlitTextArea.value = event.target.value;
-            // Dispatch input event for Streamlit to recognize the change
-            // This is crucial for Streamlit's state management
-            streamlitTextArea.dispatchEvent(new Event('input', { bubbles: true }));
-        });
-        // Set initial value when the page loads
-        streamlitTextArea.value = customInput.value;
-        streamlitTextArea.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-</script>
-""", unsafe_allow_html=True)
+# Removed the JavaScript section as it's no longer needed for syncing custom HTML input
