@@ -191,8 +191,8 @@ if df_patents is None or patent_embeddings is None:
 
 # --- Section for problem input and search ---
 st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
-# Updated instruction for a more generic apiculture query
-st.markdown("<p class='text-gray-600 mb-6'>Describe tu necesidad o desafío relacionado con la apicultura.</p>", unsafe_allow_html=True)
+# Removed the specific instruction line for apiculture needs
+# st.markdown("<p class='text-gray-600 mb-6'>Describe tu necesidad o desafío relacionado con la apicultura.</p>", unsafe_allow_html=True)
 
 
 # Fixed number of results, no slider
