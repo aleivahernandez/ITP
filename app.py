@@ -109,15 +109,17 @@ st.markdown(
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
-        /* Hide the hidden text_area container */
-        .hidden-textarea-container {
-            display: none;
-        }
-        .st-emotion-cache-1gysd4a { /* Adjust text area styling */
-             border-radius: 0.75rem;
-             border: 1px solid #d1d5db;
-             padding: 0.75rem;
-             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        /* Target the Streamlit-generated container for st.text_area within a form */
+        /* This class name might vary slightly based on Streamlit version */
+        div[data-testid="stForm"] div.st-emotion-cache-1gysd4a, /* Common for textarea containers */
+        div[data-testid="stForm"] div.st-emotion-cache-10o5u3h { /* Another common wrapper for widgets */
+            display: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
         }
         .st-emotion-cache-10o5u3h { /* Adjust button styling */
             background-color: #20c997;
@@ -158,7 +160,6 @@ def load_embedding_model():
     `st.cache_resource` is used to load the model only once and reuse it,
     improving application performance.
     """
-    # Removed st.write and st.success messages for cleaner loading
     model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     return model
 
@@ -191,7 +192,6 @@ def process_patent_data(file_path):
             # Loads the embeddings model
             model = load_embedding_model()
 
-            # Removed st.write and st.success messages for cleaner loading
             # Generates embeddings for all patent descriptions
             corpus_embeddings = model.encode(df['Descripción Completa'].tolist(), convert_to_tensor=True)
             return df, corpus_embeddings
@@ -203,7 +203,7 @@ def process_patent_data(file_path):
             return None, None
     return None, None
 
-# --- Automatic local Excel file loading section (no visible header) ---
+# --- Automatic local Excel file loading section ---
 
 # The name of the local Excel file in the same repository
 excel_file_name = "patentes.xlsx"
@@ -223,8 +223,6 @@ if df_patents is None or patent_embeddings is None:
              "y que contenga las columnas 'titulo' y 'resumen'.")
     st.stop() # Stop the app if data can't be loaded
 
-# Removed st.success message here for cleaner loading
-
 # --- Section for problem input and search ---
 st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
 st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
@@ -241,7 +239,7 @@ with st.form(key='search_form', clear_on_submit=False):
 
     st.markdown(f"""
         <div class="search-input-container">
-            <input type="text" id="problem_description_input" name="problem_description" 
+            <input type="text" id="problem_description_input" name="problem_description"
                    value="{initial_search_value}" placeholder="Describe tu problema técnico o necesidad funcional">
             <button type="submit" class="search-button">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6">
@@ -251,8 +249,8 @@ with st.form(key='search_form', clear_on_submit=False):
         </div>
         """, unsafe_allow_html=True)
     
-    # This hidden Streamlit text_area will capture the value from the custom HTML input via JavaScript.
-    # It is styled to be completely invisible.
+    # This Streamlit text_area is present only to capture the value for the form submission.
+    # It is made invisible by the CSS rules defined at the top.
     problem_description_from_form = st.text_area(
         "Hidden input for problem description", # Label, though hidden
         value=initial_search_value, # Initial value
@@ -322,27 +320,17 @@ with st.form(key='search_form', clear_on_submit=False):
 st.markdown("""
 <script>
     const customInput = document.getElementById('problem_description_input');
-    // Find the parent div of the st.text_area based on its label or a characteristic class/attribute
-    // Streamlit adds a class like st-emotion-cache-<hash>-stTextArea to the containing div of st.text_area
-    // We'll target the div that directly contains the textarea.
+    // Find the Streamlit text_area itself. Streamlit adds a specific data-testid or aria-label
     const streamlitTextArea = document.querySelector('textarea[aria-label="Hidden input for problem description"]');
 
     if (customInput && streamlitTextArea) {
-        // Find the top-level parent div of the Streamlit text area to hide it
-        let currentElement = streamlitTextArea;
-        while (currentElement && !currentElement.classList.contains('st-emotion-cache-1gysd4a')) { // Adjust class name as needed
-            currentElement = currentElement.parentElement;
-        }
-        if (currentElement) {
-            currentElement.style.display = 'none'; // Hide the entire Streamlit text area container
-        }
-
         customInput.addEventListener('input', (event) => {
             streamlitTextArea.value = event.target.value;
             // Dispatch input event for Streamlit to recognize the change
+            // This is crucial for Streamlit's state management
             streamlitTextArea.dispatchEvent(new Event('input', { bubbles: true }));
         });
-        // Set initial value
+        // Set initial value when the page loads
         streamlitTextArea.value = customInput.value;
         streamlitTextArea.dispatchEvent(new Event('input', { bubbles: true }));
     }
