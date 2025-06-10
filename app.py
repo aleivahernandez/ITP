@@ -136,14 +136,12 @@ st.markdown(
 )
 
 # Laptop icon SVG (used in patent cards and now in search button)
+# Escaped curly braces {{ }} in the viewBox attribute
 LAPTOP_ICON_SVG = """
 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
 </svg>
 """
-# Note: The SVG above is a magnifying glass, not a laptop icon.
-# I will rename it in my local thinking for clarity, but keep the variable name LAPTOP_ICON_SVG
-# in the code to minimize changes and potential side effects from variable renaming.
 
 # --- Functions for loading and processing data/models ---
 
@@ -238,7 +236,7 @@ with st.form(key='search_form', clear_on_submit=False):
             <input type="text" id="problem_description_input" name="problem_description"
                    value="{initial_search_value}" placeholder="Escribe aquí tu necesidad apícola...">
             <button type="submit" class="search-button">
-                {LAPTOP_ICON_SVG} {/* Using LAPTOP_ICON_SVG which is actually the magnifying glass SVG */}
+                {LAPTOP_ICON_SVG}
             </button>
         </div>
         """, unsafe_allow_html=True)
