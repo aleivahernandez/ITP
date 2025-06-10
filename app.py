@@ -3,7 +3,7 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
-import html # Added this import
+import html
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -27,7 +27,39 @@ st.markdown(
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Soft shadow */
             padding: 2.5rem; /* Padding inside the app container */
         }
-        /* Removed .search-input-container and .search-button CSS as they are no longer used */
+        .search-input-container {
+            display: flex;
+            align-items: center;
+            border: 2px solid #20c997; /* Teal border */
+            border-radius: 9999px; /* Fully rounded */
+            padding: 0.5rem 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .search-input-container input {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            font-size: 1.125rem; /* text-lg */
+            padding: 0.5rem 0.75rem;
+            background: transparent;
+        }
+        .search-button {
+            background-color: #20c997; /* Teal background */
+            color: white;
+            border-radius: 9999px; /* Fully rounded */
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex; /* Make it flex to center SVG */
+            justify-content: center;
+            align-items: center;
+        }
+        .search-button:hover {
+            background-color: #1aae89; /* Darker teal on hover */
+        }
         .patent-card {
             display: flex;
             align-items: flex-start;
@@ -81,62 +113,37 @@ st.markdown(
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
-        /* Adjust standard Streamlit text area styling */
-        textarea[aria-label="Describe tu problema técnico o necesidad funcional:"],
-        textarea[aria-label="Ingresa la descripción de tu problema técnico o necesidad funcional:"] {
-            border-radius: 0.75rem !important; /* rounded-xl */
-            border: 1px solid #d1d5db !important;
-            padding: 0.75rem !important;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-        }
-        /* Adjust standard Streamlit button styling */
-        button[data-testid="stFormSubmitButton"] {
-            background-color: #20c997 !important;
-            color: white !important;
-            border-radius: 0.75rem !important; /* rounded-xl */
-            padding: 0.75rem 1.5rem !important;
-            font-weight: 600 !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-            transition: background-color 0.2s ease !important;
-        }
-        button[data-testid="stFormSubmitButton"]:hover {
-            background-color: #1aae89 !important;
-        }
-        .st-emotion-cache-16idsys p, /* Adjust default paragraph font size for st.markdown */
-        .st-emotion-cache-1s2a8v p { /* Adjust `st.markdown` `p` tag font size for older versions */
-            font-size: 1rem;
-        }
-        /* Additional CSS to make the st.text_area resemble the image input field if possible */
-        div.st-emotion-cache-1gysd4a { /* Container for text_area */
-            border: 2px solid #20c997; /* Teal border */
-            border-radius: 9999px; /* Fully rounded */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 0.5rem 1rem; /* Adjust padding to match the image's input */
-            margin-bottom: 2rem; /* Spacing below the input */
-            display: flex; /* Use flex to align content inside */
-            align-items: center; /* Center vertically */
-        }
-        div.st-emotion-cache-1gysd4a textarea { /* The textarea inside the container */
+        /* --- CSS para ocultar componentes nativos de Streamlit --- */
+        /* Oculta el st.text_area por su data-testid y padre */
+        div[data-testid="stTextArea"] { /* Target the Streamlit textarea component itself */
+            display: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            padding: 0 !important;
+            margin: 0 !important;
             border: none !important;
-            outline: none !important;
-            box-shadow: none !important;
-            padding: 0 !important; /* Remove internal padding if container has it */
-            margin: 0 !important; /* Remove internal margin */
-            font-size: 1.125rem; /* text-lg */
-            flex-grow: 1; /* Make it take available space */
-            background: transparent !important;
-            resize: none; /* Prevent manual resizing by user */
         }
-        /* Hide default Streamlit text area label if needed after custom CSS */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] {
+        /* Oculta el label asociado al st.text_area */
+        label[data-testid="stWidgetLabel"]:has( + div[data-testid="stTextArea"]) {
             display: none !important;
         }
-        /* Adjust form submit button alignment if needed */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid="stFormSubmitButton"] {
-            display: block; /* Ensure it's a block element */
-            margin: 0 auto; /* Center the button */
+        /* Oculta el st.form_submit_button nativo */
+        button[data-testid="stFormSubmitButton"] {
+            display: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
         }
 
+        /* Ajustes de estilos para los elementos de texto estándar de Streamlit, si aparecen */
+        .st-emotion-cache-16idsys p, /* Ajusta el tamaño de fuente predeterminado para st.markdown */
+        .st-emotion-cache-1s2a8v p { /* Ajusta el tamaño de fuente para `p` en `st.markdown` para versiones anteriores */
+            font-size: 1rem;
+        }
     </style>
     """,
     unsafe_allow_html=True
@@ -144,7 +151,7 @@ st.markdown(
 
 # Laptop icon SVG (used in patent cards)
 LAPTOP_ICON_SVG = """
-<svg class="patent-icon" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm1.454 11.085a.75.75 0 00-.735.434l-.626 1.706a.75.75 0 00.923 1.054l.583-.178h13.375l.583.178a.75.75 0 00.923-1.054l-.626-1.706a.75.75 0 00-.735-.434H4.454z" clip-rule="evenodd" />
 </svg>
 """
@@ -164,7 +171,7 @@ def load_embedding_model():
     return model
 
 @st.cache_data
-def process_patent_data(file_path): # Removed model_instance parameter
+def process_patent_data(file_path):
     """
     Processes the Excel patent file from a local path.
     Reads the file, combines title and summary, and generates the embeddings.
@@ -209,16 +216,12 @@ def process_patent_data(file_path): # Removed model_instance parameter
 # The name of the local Excel file in the same repository
 excel_file_name = "patentes.xlsx"
 
-# The embedding model is now loaded inside process_patent_data, no need to load it here
-# model = load_embedding_model() # This line is removed
-
 # Initialize df_patents and patent_embeddings
 df_patents = None
 patent_embeddings = None
 
 # Processes the data automatically upon application startup
 with st.spinner(f"Inicializando base de datos de patentes..."):
-    # Call process_patent_data without passing the model instance
     df_patents, patent_embeddings = process_patent_data(excel_file_name)
 
 if df_patents is None or patent_embeddings is None:
@@ -237,55 +240,60 @@ MAX_RESULTS = 3
 
 # Use a form to capture the text input and button press together for better UX
 with st.form(key='search_form', clear_on_submit=False):
-    # This is the Streamlit text_area, now visible and primary for input
-    problem_description = st.text_area(
-        "Describe tu problema técnico o necesidad funcional:",
-        value="Necesito un sistema de cierre hermético de envases sin usar calor.",
+    # Initial value for the custom input.
+    initial_search_value = "Necesito un sistema de cierre hermético de envases sin usar calor."
+
+    # This creates the visual search bar with an HTML input and a custom SVG button
+    st.markdown(f"""
+        <div class="search-input-container">
+            <input type="text" id="problem_description_input" name="problem_description"
+                   value="{initial_search_value}" placeholder="Describe tu problema técnico o necesidad funcional">
+            <button type="submit" class="search-button">
+                {LAPTOP_ICON_SVG} {/* Use the SVG for the search icon */}
+            </button>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # This Streamlit text_area is present only to capture the value for the form submission.
+    # It is completely hidden by CSS rules.
+    problem_description_from_form = st.text_area(
+        "Hidden input for problem description", # Label, though hidden
+        value=initial_search_value, # Initial value
         height=68, # Required minimum height
-        label_visibility="visible", # Ensure label is visible
-        key="problem_description_input_area", # Renamed key for clarity
-        placeholder="Escribe aquí tu problema técnico..." # Added placeholder
+        label_visibility="hidden", # Hide the label
+        key="form_problem_description", # Key for internal Streamlit tracking
+        placeholder="Este campo está oculto." # Placeholder, won't be seen
     )
     
-    # This is the Streamlit form submit button, now visible and primary for submission
-    # We will style this to look like the search icon from the image
+    # This st.form_submit_button is also present only for functionality.
+    # It is completely hidden by CSS rules.
     submitted = st.form_submit_button("Buscar Soluciones", type="primary")
 
-    # If the form is submitted
+    # If the form is submitted via the custom HTML button (which triggers st.form_submit_button)
     if submitted:
-        current_problem_description = problem_description.strip() # Direct access to text_area value
+        current_problem_description = problem_description_from_form.strip() # Get value from hidden text_area
 
         if not current_problem_description:
             st.warning("Por favor, ingresa una descripción del problema.")
         else:
             with st.spinner("Buscando patentes relevantes..."):
                 try:
-                    # Generates the embedding of the problem description
-                    # Ensure 'model' is accessible here. Since it's loaded globally and then re-loaded in process_patent_data,
-                    # we should retrieve it again to be safe, or just ensure it's in scope.
-                    # Best practice is to call the @st.cache_resource func directly when needed.
-                    current_model = load_embedding_model() 
+                    current_model = load_embedding_model()
                     query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
 
-                    # Calculates cosine similarity between the problem and all patents
-                    # It's important that both tensors are on the same device (CPU/GPU)
                     cosine_scores = util.cos_sim(query_embedding, patent_embeddings)[0]
-
-                    # Gets the indices of the most similar patents
-                    top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:MAX_RESULTS] # Use MAX_RESULTS
+                    top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:MAX_RESULTS]
 
                     if len(top_results_indices) == 0:
                         st.info("No se encontraron patentes relevantes con la descripción proporcionada.")
                     else:
                         for i, idx in enumerate(top_results_indices):
                             score = cosine_scores[idx].item()
-                            patent_title = df_patents.iloc[idx]['titulo'] # Using 'titulo' in lowercase
-                            patent_summary = df_patents.iloc[idx]['resumen'] # Using 'resumen' in lowercase
+                            patent_title = df_patents.iloc[idx]['titulo']
+                            patent_summary = df_patents.iloc[idx]['resumen']
                             
-                            # Tries to get the patent number if the column exists
                             patent_number = df_patents.iloc[idx]['numero de patente'] if 'numero de patente' in df_patents.columns else 'N/A'
 
-                            # Randomly assign a tag for demonstration
                             tag_text = "Disponible para uso" if i % 2 == 0 else "Protección vigente"
                             tag_class = "tag-available" if i % 2 == 0 else "tag-protected"
 
@@ -293,10 +301,9 @@ with st.form(key='search_form', clear_on_submit=False):
                             escaped_patent_title = html.escape(patent_title)
                             escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
 
-                            # Construct the HTML content for the card
                             card_html = f"""
 <div class="patent-card">
-    {LAPTOP_ICON_SVG}
+    <div class="patent-icon">{LAPTOP_ICON_SVG}</div>
     <div class="patent-details">
         <p class="patent-title">{escaped_patent_title}</p>
         <p class="patent-summary text-sm">{escaped_patent_summary_short}</p>
@@ -306,12 +313,40 @@ with st.form(key='search_form', clear_on_submit=False):
 """
                             st.markdown(card_html, unsafe_allow_html=True)
                             
-                            # For the full summary, use an expander (optional, as the image doesn't show it)
-                            # with st.expander(f"Ver Resumen Completo de '{patent_title}'"):
-                            #     st.write(patent_summary)
-
                 except Exception as e:
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
-# Removed the JavaScript section as it's no longer needed for syncing custom HTML input
+# This JavaScript ensures that when the custom HTML input changes, the Streamlit text_area also updates.
+# This makes the form_submit_button work correctly with the custom input's value.
+st.markdown("""
+<script>
+    const customInput = document.getElementById('problem_description_input');
+    // Find the Streamlit text_area by its key (converted to data-testid attribute for textarea)
+    // Streamlit uses data-testid="stTextArea" for the textarea element
+    // And usually, the aria-label matches the label given in st.text_area
+    const streamlitTextArea = document.querySelector('textarea[aria-label="Hidden input for problem description"][data-testid="stTextArea"]');
 
+    if (customInput && streamlitTextArea) {
+        // Set initial value for Streamlit text_area from custom input
+        streamlitTextArea.value = customInput.value;
+        streamlitTextArea.dispatchEvent(new Event('input', { bubbles: true })); // Dispatch event to update Streamlit state
+
+        customInput.addEventListener('input', (event) => {
+            streamlitTextArea.value = event.target.value;
+            // Dispatch input event for Streamlit to recognize the change
+            streamlitTextArea.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        // Optional: Trigger form submission if Enter key is pressed in the custom input
+        customInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission if any
+                const form = customInput.closest('form');
+                if (form) {
+                    form.querySelector('button[type="submit"]').click(); // Programmatically click the submit button
+                }
+            }
+        });
+    }
+</script>
+""", unsafe_allow_html=True)
