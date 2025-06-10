@@ -4,6 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
+from googletrans import Translator # Import the Translator
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -71,7 +72,7 @@ st.markdown(
         /* Estiliza el st.text_area para parecerse al input de la imagen */
         textarea[aria-label="Describe tu problema técnico o necesidad funcional:"] {
             border-radius: 9999px !important; /* Fully rounded */
-            border: 2px solid #20c997 !important; /* Teal border */
+            border: 1px solid #d1d5db !important; /* Changed from green to light gray border */
             padding: 0.5rem 1.5rem !important; /* Adjust padding */
             box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
             font-size: 1.125rem !important; /* text-lg */
@@ -135,11 +136,36 @@ def load_embedding_model():
         st.success("Modelo de embeddings cargado correctamente.")
     return model
 
+@st.cache_resource
+def get_translator():
+    """
+    Initializes and returns a googletrans Translator object.
+    Uses st.cache_resource to ensure it's initialized only once.
+    """
+    return Translator()
+
+@st.cache_data
+def translate_text(text, dest_lang='es'):
+    """
+    Translates text to the destination language.
+    Uses st.cache_data to cache translation results.
+    """
+    if pd.isna(text) or text.strip() == "":
+        return ""
+    translator = get_translator()
+    try:
+        translated = translator.translate(text, dest=dest_lang)
+        return translated.text
+    except Exception as e:
+        st.warning(f"No se pudo traducir el texto: '{text[:50]}...'. Error: {e}")
+        return text # Return original text if translation fails
+
+
 @st.cache_data
 def process_patent_data(file_path):
     """
     Processes the Excel patent file from a local path.
-    Reads the file, combines title and summary, and generates the embeddings.
+    Reads the file, combines title and summary (after translation), and generates the embeddings.
     `st.cache_data` is used to cache processed data
     and generated embeddings, avoiding unnecessary reprocessing.
     """
@@ -148,18 +174,25 @@ def process_patent_data(file_path):
             # Reads the Excel file from the local path
             df = pd.read_excel(file_path)
 
-            # Validate that the necessary columns exist (now in lowercase)
-            required_columns = ['titulo', 'resumen']
+            # Validate that the necessary columns exist with new names
+            required_columns = ['Title (Original language)', 'Abstract (Original Language)']
             if not all(col in df.columns for col in required_columns):
                 st.error(f"El archivo Excel debe contener las columnas: {', '.join(required_columns)}")
                 return None, None
 
-            # Fill null values in 'titulo' and 'resumen' with empty strings to avoid errors
-            df['titulo'] = df['titulo'].fillna('')
-            df['resumen'] = df['resumen'].fillna('')
+            # Fill null values with empty strings
+            df['Title (Original language)'] = df['Title (Original language)'].fillna('')
+            df['Abstract (Original language)'] = df['Abstract (Original language)'].fillna('')
 
-            # Combines title and summary to create a complete patent description
-            df['Descripción Completa'] = df['titulo'] + ". " + df['resumen']
+            st.write("Traduciendo títulos y resúmenes (esto puede tardar un momento si hay muchos)...")
+            # Translate titles and abstracts to Spanish
+            df['Titulo Traducido'] = df['Title (Original language)'].apply(lambda x: translate_text(x, 'es'))
+            df['Resumen Traducido'] = df['Abstract (Original language)'].apply(lambda x: translate_text(x, 'es'))
+            st.success("Traducción completada.")
+
+
+            # Combines the translated title and summary to create a complete patent description
+            df['Descripción Completa'] = df['Titulo Traducido'] + ". " + df['Resumen Traducido']
 
             # Load the embedding model INSIDE this cached function
             # Since load_embedding_model is also cached, it will only run once
@@ -192,7 +225,7 @@ with st.spinner(f"Inicializando base de datos de patentes..."):
 if df_patents is None or patent_embeddings is None:
     st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
              "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
-             "y que contenga las columnas 'titulo' y 'resumen'.")
+             "y que contenga las columnas 'Title (Original language)' y 'Abstract (Original Language)'.")
     st.stop() # Stop the app if data can't be loaded
 
 # --- Section for problem input and search ---
@@ -240,8 +273,9 @@ with st.form(key='search_form', clear_on_submit=False):
                     else:
                         for i, idx in enumerate(top_results_indices):
                             score = cosine_scores[idx].item()
-                            patent_title = df_patents.iloc[idx]['titulo']
-                            patent_summary = df_patents.iloc[idx]['resumen']
+                            # Use the translated title and abstract for display
+                            patent_title = df_patents.iloc[idx]['Titulo Traducido']
+                            patent_summary = df_patents.iloc[idx]['Resumen Traducido']
                             
                             patent_number = df_patents.iloc[idx]['numero de patente'] if 'numero de patente' in df_patents.columns else 'N/A'
 
