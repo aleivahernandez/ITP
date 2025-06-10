@@ -284,7 +284,7 @@ with st.form(key='search_form', clear_on_submit=False):
 
                             card_html = f"""
 <div class="patent-card">
-    <div class="patent-icon">{MAGNIFYING_GLASS_SVG}</div> {/* Changed to MAGNIFYING_GLASS_SVG for patent icon too if desired */}
+    <div class="patent-icon">{MAGNIFYING_GLASS_SVG}</div>
     <div class="patent-details">
         <p class="patent-title">{escaped_patent_title}</p>
         <p class="patent-summary text-sm">{escaped_patent_summary_short}</p>
