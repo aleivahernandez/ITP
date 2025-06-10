@@ -9,18 +9,18 @@ st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas
 st.title("💡 Explorador de Soluciones Técnicas (Patentes)")
 st.markdown("Describe tu problema técnico o necesidad funcional y encuentra patentes relevantes.")
 
-# --- Funciones para cargar y procesar datos/modelos ---
+# --- Functions for loading and processing data/models ---
 
 @st.cache_resource
 def load_embedding_model():
     """
-    Carga el modelo pre-entrenado de SentenceTransformer.
-    Se utiliza `st.cache_resource` para cargar el modelo una sola vez y reutilizarlo,
-    mejorando el rendimiento de la aplicación.
+    Loads the pre-trained SentenceTransformer model.
+    `st.cache_resource` is used to load the model only once and reuse it,
+    improving application performance.
     """
-    # Modelo multilingüe que funciona bien para español y semantic similarity
-    # Otros modelos posibles: 'distiluse-base-multilingu al-cased-v1'
-    # Consulta: https://www.sbert.net/docs/pretrained_models.html
+    # Multilingual model that works well for Spanish and semantic similarity
+    # Other possible models: 'distiluse-base-multilingu al-cased-v1'
+    # Check: https://www.sbert.net/docs/pretrained_models.html
     st.write("Cargando el modelo de embeddings (esto puede tardar un momento)...")
     model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     st.success("Modelo de embeddings cargado correctamente.")
@@ -29,34 +29,34 @@ def load_embedding_model():
 @st.cache_data
 def process_patent_data(file_path):
     """
-    Procesa el archivo Excel de patentes desde una ruta local.
-    Lee el archivo, combina título y resumen, y genera los embeddings.
-    Se utiliza `st.cache_data` para almacenar en caché los datos procesados
-    y los embeddings generados, evitando reprocesamientos innecesarios.
+    Processes the Excel patent file from a local path.
+    Reads the file, combines title and summary, and generates the embeddings.
+    `st.cache_data` is used to cache processed data
+    and generated embeddings, avoiding unnecessary reprocessing.
     """
     if file_path:
         try:
-            # Lee el archivo Excel desde la ruta local
+            # Reads the Excel file from the local path
             df = pd.read_excel(file_path)
 
-            # Validar que las columnas necesarias existan (ahora en minúsculas)
+            # Validate that the necessary columns exist (now in lowercase)
             required_columns = ['titulo', 'resumen']
             if not all(col in df.columns for col in required_columns):
                 st.error(f"El archivo Excel debe contener las columnas: {', '.join(required_columns)}")
                 return None, None
 
-            # Rellenar valores nulos en 'titulo' y 'resumen' con cadenas vacías para evitar errores
+            # Fill null values in 'titulo' and 'resumen' with empty strings to avoid errors
             df['titulo'] = df['titulo'].fillna('')
             df['resumen'] = df['resumen'].fillna('')
 
-            # Combina el título y el resumen para crear una descripción completa de la patente
+            # Combines title and summary to create a complete patent description
             df['Descripción Completa'] = df['titulo'] + ". " + df['resumen']
 
-            # Carga el modelo de embeddings
+            # Loads the embeddings model
             model = load_embedding_model()
 
             st.write("Generando embeddings para las patentes (esto puede tardar un momento)...")
-            # Genera embeddings para todas las descripciones de patentes
+            # Generates embeddings for all patent descriptions
             corpus_embeddings = model.encode(df['Descripción Completa'].tolist(), convert_to_tensor=True)
             st.success(f"Embeddings generados para {len(df)} patentes.")
             return df, corpus_embeddings
@@ -68,58 +68,52 @@ def process_patent_data(file_path):
             return None, None
     return None, None
 
-# --- Sección para la carga automática del archivo Excel local ---
-st.header("1. Patentes cargadas")
+# --- Automatic local Excel file loading section (no visible header) ---
 
-# El nombre del archivo Excel local en el mismo repositorio
+# The name of the local Excel file in the same repository
 excel_file_name = "patentes.xlsx"
 
-# Inicializar model y corpus_embeddings
+# Initialize model and corpus_embeddings
 model = None
 df_patents = None
 patent_embeddings = None
 
-# Procesa los datos automáticamente al iniciar la aplicación
-with st.spinner(f"Cargando y procesando patentes desde '{excel_file_name}'..."):
+# Processes the data automatically upon application startup
+with st.spinner(f"Inicializando base de datos de patentes..."):
     df_patents, patent_embeddings = process_patent_data(excel_file_name)
 
-if df_patents is not None and patent_embeddings is not None:
-    model = load_embedding_model()
-    st.success(f"Archivo '{excel_file_name}' cargado y {len(df_patents)} patentes procesadas.")
-    st.dataframe(df_patents[['titulo', 'resumen']].head()) # Muestra las primeras filas para verificación
-else:
-    st.error(f"No se pudo cargar o procesar el archivo Excel '{excel_file_name}'. "
+if df_patents is None or patent_embeddings is None:
+    st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
              "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
              "y que contenga las columnas 'titulo' y 'resumen'.")
+    st.stop() # Stop the app if data can't be loaded
 
-
-# --- Sección para la entrada de la problemática y búsqueda ---
-st.header("2. Describe tu Problema o Necesidad")
+# --- Section for problem input and search ---
+st.header("1. Describe tu Problema o Necesidad") # Re-numbered to 1 as previous section is hidden
 problem_description = st.text_area(
     "Ingresa la descripción de tu problema técnico o necesidad funcional:",
     "Necesito un sistema de cierre hermético para envases sin usar calor.",
     height=100
 )
 
-num_results = st.slider("Número de patentes a mostrar:", min_value=1, max_value=20, value=5)
+# Fixed number of results, no slider
+MAX_RESULTS = 3
 
 if st.button("Buscar Soluciones"):
-    if df_patents is None or patent_embeddings is None or model is None:
-        st.error("Por favor, asegúrate de que el archivo de patentes se haya cargado correctamente.")
-    elif not problem_description.strip():
+    if not problem_description.strip():
         st.warning("Por favor, ingresa una descripción del problema.")
     else:
         with st.spinner("Buscando patentes relevantes..."):
             try:
-                # Genera el embedding de la descripción del problema
+                # Generates the embedding of the problem description
                 query_embedding = model.encode(problem_description, convert_to_tensor=True)
 
-                # Calcula la similitud coseno entre el problema y todas las patentes
-                # Es importante que ambos tensores estén en el mismo dispositivo (CPU/GPU)
+                # Calculates cosine similarity between the problem and all patents
+                # It's important that both tensors are on the same device (CPU/GPU)
                 cosine_scores = util.cos_sim(query_embedding, patent_embeddings)[0]
 
-                # Obtiene los índices de las patentes más similares
-                top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:num_results]
+                # Gets the indices of the most similar patents
+                top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:MAX_RESULTS] # Use MAX_RESULTS
 
                 st.subheader(f"Patentes más relevantes para: '{problem_description}'")
 
@@ -128,11 +122,11 @@ if st.button("Buscar Soluciones"):
                 else:
                     for i, idx in enumerate(top_results_indices):
                         score = cosine_scores[idx].item()
-                        patent_title = df_patents.iloc[idx]['titulo'] # Usando 'titulo' en minúscula
-                        patent_summary = df_patents.iloc[idx]['resumen'] # Usando 'resumen' en minúscula
+                        patent_title = df_patents.iloc[idx]['titulo'] # Using 'titulo' in lowercase
+                        patent_summary = df_patents.iloc[idx]['resumen'] # Using 'resumen' in lowercase
                         
-                        # Intenta obtener el número de patente si existe la columna
-                        # Aquí también se buscará 'Número de Patente' en minúscula si el usuario lo cambió
+                        # Tries to get the patent number if the column exists
+                        # Also looks for 'numero de patente' in lowercase if the user changed it
                         patent_number = df_patents.iloc[idx]['numero de patente'] if 'numero de patente' in df_patents.columns else 'N/A'
 
                         st.markdown(f"---")
@@ -144,6 +138,3 @@ if st.button("Buscar Soluciones"):
 
             except Exception as e:
                 st.error(f"Ocurrió un error durante la búsqueda: {e}")
-
-st.markdown("---")
-st.markdown("Construido con ❤️ usando Streamlit y Sentence-Transformers.")
