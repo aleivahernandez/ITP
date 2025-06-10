@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
-from googletrans import Translator # Import the Translator
+from deep_translator import GoogleTranslator # Changed from googletrans.Translator
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -115,12 +115,6 @@ MAGNIFYING_GLASS_SVG = """
     <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
 </svg>
 """
-# Laptop icon SVG (if you want a laptop icon in cards instead of magnifying glass)
-# LAPTOP_ICON_SVG = """
-# <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-#     <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm1.454 11.085a.75.75 0 00-.735.434l-.626 1.706a.75.75 0 00.923 1.054l.583-.178h13.375l.583.178a.75.75 0 00.923-1.054l-.626-1.706a.75.75 0 00-.735-.434H4.454z" clip-rule="evenodd" />
-# </svg>
-# """
 
 # --- Functions for loading and processing data/models ---
 
@@ -136,28 +130,30 @@ def load_embedding_model():
         st.success("Modelo de embeddings cargado correctamente.")
     return model
 
-@st.cache_resource
-def get_translator():
-    """
-    Initializes and returns a googletrans Translator object.
-    Uses st.cache_resource to ensure it's initialized only once.
-    """
-    return Translator()
+# Removed get_translator() as GoogleTranslator is used directly
+# @st.cache_resource
+# def get_translator():
+#     """
+#     Initializes and returns a googletrans Translator object.
+#     Uses st.cache_resource to ensure it's initialized only once.
+#     """
+#     return Translator()
 
 @st.cache_data
 def translate_text(text, dest_lang='es'):
     """
-    Translates text to the destination language.
+    Translates text to the destination language using deep_translator.
     Uses st.cache_data to cache translation results.
     """
     if pd.isna(text) or text.strip() == "":
         return ""
-    translator = get_translator()
     try:
-        translated = translator.translate(text, dest=dest_lang)
-        return translated.text
+        # GoogleTranslator can be used directly without explicit initialization for simple cases
+        translated = GoogleTranslator(source='auto', target=dest_lang).translate(text)
+        return translated
     except Exception as e:
         st.warning(f"No se pudo traducir el texto: '{text[:50]}...'. Error: {e}")
+        st.info("Considera traducir la base de datos de Excel previamente para mayor fiabilidad.")
         return text # Return original text if translation fails
 
 
@@ -182,7 +178,7 @@ def process_patent_data(file_path):
 
             # Fill null values with empty strings
             df['Title (Original language)'] = df['Title (Original language)'].fillna('')
-            df['Abstract (Original language)'] = df['Abstract (Original language)'].fillna('')
+            df['Abstract (Original Language)'] = df['Abstract (Original language)'].fillna('')
 
             st.write("Traduciendo títulos y resúmenes (esto puede tardar un momento si hay muchos)...")
             # Translate titles and abstracts to Spanish
