@@ -273,7 +273,7 @@ with st.form(key='search_form', clear_on_submit=False):
         height=68, # Required minimum height
         label_visibility="hidden", # Hide the label
         key="form_problem_description", # Key for internal Streamlit tracking
-        placeholder="Este campo está oculto.", # Placeholder, won't be seen
+        placeholder="Este campo está oculto.", # Placeholder, wonon't be seen
         help="Este campo es solo para la lógica interna y está oculto visualmente." # Help text, also hidden
     )
     
