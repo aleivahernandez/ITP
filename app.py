@@ -4,6 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
+import re # Import the re module for regular expressions
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -153,17 +154,32 @@ def load_embedding_model():
 def get_drive_direct_link(drive_link):
     """
     Converts a public Google Drive share link to a direct download link.
-    Returns the original link if it's not a recognized Google Drive share link.
+    Handles multiple common Google Drive URL formats.
+    Returns the original link if it's not a recognized Google Drive share link or is empty.
     """
-    if pd.isna(drive_link) or not isinstance(drive_link, str):
-        return ""
-    if "drive.google.com" in drive_link and "/view" in drive_link:
-        try:
-            file_id = drive_link.split('/d/')[1].split('/view')[0]
-            return f"https://docs.google.com/uc?export=download&id={file_id}"
-        except IndexError:
-            return drive_link # Return original if ID parsing fails
-    return drive_link # Return original link if not a recognizable Google Drive share link
+    if pd.isna(drive_link) or not isinstance(drive_link, str) or not drive_link.strip():
+        return "" # Return empty string for NaN or empty links
+
+    # Pattern for /file/d/FILE_ID/view links
+    match_view = re.search(r'drive\.google\.com/file/d/([^/]+)/view', drive_link)
+    if match_view:
+        file_id = match_view.group(1)
+        return f"https://drive.google.com/uc?export=download&id={file_id}"
+
+    # Pattern for /open?id=FILE_ID links
+    match_open = re.search(r'drive\.google\.com/open\?id=([^&]+)', drive_link)
+    if match_open:
+        file_id = match_open.group(1)
+        return f"https://drive.google.com/uc?export=download&id={file_id}"
+    
+    # Pattern for /file/d/FILE_ID/edit or similar (less common for direct view)
+    match_edit = re.search(r'drive\.google\.com/file/d/([^/]+)', drive_link)
+    if match_edit:
+        file_id = match_edit.group(1)
+        return f"https://drive.google.com/uc?export=download&id={file_id}"
+
+    # If no specific pattern is matched, return original link
+    return drive_link
 
 @st.cache_data
 def process_patent_data(file_path):
@@ -206,8 +222,12 @@ def process_patent_data(file_path):
             df[original_abstract_col] = df[original_abstract_col].fillna('')
             if image_col in df.columns:
                 df[image_col] = df[image_col].fillna('')
-                st.write("Procesando URLs de imágenes (Google Drive si aplica)...")
+                st.write("Procesando URLs de imágenes (Google Drive si aplica)... Asegúrate de que los enlaces sean públicos.")
                 df['image_url_processed'] = df[image_col].apply(get_drive_direct_link)
+                # Display first 5 processed image URLs for debugging
+                st.info("Primeras 5 URLs de imágenes procesadas (para depuración):")
+                for i, url in enumerate(df['image_url_processed'].head(5)):
+                    st.write(f"- {url}")
                 st.success("URLs de imágenes procesadas.")
             else:
                 df['image_url_processed'] = "" # Add empty column if 'Image' not present
@@ -317,7 +337,7 @@ with st.form(key='search_form', clear_on_submit=False):
     <div class="similarity-score">Similitud: {score:.2%}</div>
     <div class="patent-image-container">
         <img src="{patent_image_url if patent_image_url else default_image_url}" 
-             alt="" class="patent-thumbnail" 
+             alt="[Image of {escaped_patent_title}]" class="patent-thumbnail" 
              onerror="this.onerror=null;this.src='{default_image_url}';">
     </div>
     <div class="google-patent-content-details">
