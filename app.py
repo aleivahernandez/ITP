@@ -118,22 +118,8 @@ st.markdown(
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
-        /* --- CSS para ocultar completamente componentes nativos de Streamlit --- */
-        /* Oculta el contenedor del st.text_area y sus descendientes */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"],
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"],
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] + div[data-testid="stTextArea"] * {
-            display: none !important;
-            height: 0 !important;
-            width: 0 !important;
-            overflow: hidden !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
-        }
-        /* Oculta el st.form_submit_button y sus descendientes */
-        button[data-testid="stFormSubmitButton"],
-        button[data-testid="stFormSubmitButton"] * {
+        /* --- CSS para ocultar completamente el div de widgets ocultos --- */
+        #hidden_streamlit_widgets_wrapper {
             display: none !important;
             height: 0 !important;
             width: 0 !important;
@@ -265,8 +251,7 @@ with st.form(key='search_form', clear_on_submit=False):
     # Initial value for the custom input.
     initial_search_value = "Necesito soluciones para la gestión eficiente de la producción de miel."
 
-    # This creates the visual search bar with an HTML input and a custom SVG-based clickable div
-    # The SVG will be injected via JavaScript
+    # This creates the visual search bar with an HTML input and a custom SVG-based clickable button
     st.markdown(f"""
         <div class="search-input-container">
             <input type="text" id="problem_description_input" name="problem_description"
@@ -278,7 +263,10 @@ with st.form(key='search_form', clear_on_submit=False):
         """, unsafe_allow_html=True)
     
     # These Streamlit widgets are present only for functionality.
-    # They are completely hidden by CSS rules.
+    # They are completely hidden by CSS rules applied to #hidden_streamlit_widgets_wrapper.
+    # Ensure they are within a container or block that can be targeted effectively.
+    st.markdown('<div id="hidden_streamlit_widgets_wrapper">', unsafe_allow_html=True) # Wrapper div to hide all Streamlit widgets
+
     problem_description_from_form = st.text_area(
         "Hidden input for problem description", # Label, though hidden
         value=initial_search_value, # Initial value
@@ -290,6 +278,8 @@ with st.form(key='search_form', clear_on_submit=False):
     )
     
     submitted = st.form_submit_button("Buscar Soluciones", type="primary")
+
+    st.markdown('</div>', unsafe_allow_html=True) # Close the hidden widgets wrapper
 
     # If the form is submitted via the custom HTML button (which triggers st.form_submit_button)
     if submitted:
