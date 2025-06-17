@@ -4,12 +4,15 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
-# Removed: import re # Not needed as get_drive_direct_link is removed
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
 
-# Custom CSS for a better visual match to Google Patents style
+# Initialize session state for selected patent for detail view
+if 'selected_patent_idx' not in st.session_state:
+    st.session_state.selected_patent_idx = None
+
+# Custom CSS for a better visual match to Google Patents style and detail view
 st.markdown(
     """
     <script src="https://cdn.tailwindcss.com"></script>
@@ -75,6 +78,7 @@ st.markdown(
             position: relative; /* For similarity score */
             display: flex; /* Use flexbox for image and content layout */
             align-items: flex-start; /* Align items to the top */
+            cursor: pointer; /* Indicate it's clickable */
         }
         .google-patent-card:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
@@ -131,6 +135,85 @@ st.markdown(
             font-weight: 600;
             z-index: 10;
         }
+        /* --- Detail View Styles --- */
+        .detail-view-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            margin-top: 2rem;
+        }
+        .detail-header {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+        .detail-content-wrapper {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+        .detail-image-box {
+            flex-shrink: 0;
+            width: 250px; /* Larger image in detail view */
+            height: 250px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        .detail-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .detail-meta-summary-wrapper {
+            flex-grow: 1;
+            min-width: 300px; /* Ensure it doesn't get too small */
+        }
+        .detail-meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        .detail-meta-table td {
+            padding: 0.5rem 0;
+            vertical-align: top;
+        }
+        .detail-meta-table td:first-child {
+            font-weight: 600;
+            color: #4d5156;
+            width: 120px; /* Fixed width for labels */
+        }
+        .detail-meta-table td:last-child {
+            color: #4d5156;
+        }
+        .detail-summary-box {
+            background-color: #f8f9fa; /* Lighter background for summary */
+            border: 1px solid #e8eaed;
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            color: #3c4043;
+            line-height: 1.6;
+        }
+        .back-button {
+            background-color: #607d8b !important; /* Grey-blue color */
+            color: white !important;
+            border-radius: 0.5rem !important;
+            padding: 0.75rem 1.25rem !important;
+            font-weight: 500 !important;
+            margin-top: 1.5rem !important;
+        }
+        .back-button:hover {
+            background-color: #455a64 !important; /* Darker grey-blue on hover */
+        }
     </style>
     """,
     unsafe_allow_html=True
@@ -147,10 +230,10 @@ def load_embedding_model():
     """
     with st.spinner("Cargando el modelo de embeddings (esto puede tardar un momento)..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        # Removed: st.success("Modelo de embeddings cargado correctamente.")
+        st.success("Modelo de embeddings cargado correctamente.")
     return model
 
-# Removed get_drive_direct_link function. Now assume URLs are directly embeddable.
+# No get_drive_direct_link function. Image URLs are assumed to be direct.
 
 @st.cache_data
 def process_patent_data(file_path):
@@ -175,36 +258,45 @@ def process_patent_data(file_path):
             df.columns = df.columns.str.strip().str.lower()
 
             # Define required columns after normalization
-            required_columns_normalized = ['title (original language)', 'abstract (original language)', 'publication number'] # Added 'publication number' to required
+            required_columns_normalized = [
+                'title (original language)',
+                'abstract (original language)',
+                'publication number',
+                'assignee - dwpi',        # New required column
+                'publication country',    # New required column
+            ]
             
             # Check if all required columns exist after normalization
-            if not all(col in df.columns for col in required_columns_normalized):
-                st.error(f"El archivo debe contener las columnas: '{required_columns_normalized[0]}', '{required_columns_normalized[1]}' y '{required_columns_normalized[2]}'. "
-                         "Por favor, revisa que los nombres de las columnas sean exactos (ignorando mayúsculas/minúsculas y espacios extra).")
-                return None, None
+            for col in required_columns_normalized:
+                if col not in df.columns:
+                    st.error(f"El archivo Excel debe contener la columna requerida: '{col}'. "
+                             "Por favor, revisa que los nombres de las columnas sean exactos (ignorando mayúsculas/minúsculas y espacios extra).")
+                    return None, None
 
             # Access columns using their normalized names
             original_title_col = 'title (original language)'
             original_abstract_col = 'abstract (original language)'
-            publication_number_col = 'publication number' # Column for image filename
-
-            # --- Configure GitHub Image Base URL ---
-            # IMPORTANT: Using the URL provided by the user
-            github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP/main/images/" 
-            # --- End GitHub Image Base URL Configuration ---
+            publication_number_col = 'publication number'
+            assignee_dwpi_col = 'assignee - dwpi'
+            publication_country_col = 'publication country'
 
             # Fill null values with empty strings
             df[original_title_col] = df[original_title_col].fillna('')
             df[original_abstract_col] = df[original_abstract_col].fillna('')
-            df[publication_number_col] = df[publication_number_col].fillna('') # Ensure publication number is filled
+            df[publication_number_col] = df[publication_number_col].fillna('')
+            df[assignee_dwpi_col] = df[assignee_dwpi_col].fillna('')
+            df[publication_country_col] = df[publication_country_col].fillna('')
 
-            st.write("Cargando y procesando URLs de imágenes desde GitHub...")
+            # --- Configure GitHub Image Base URL ---
+            # Using the URL provided by the user
+            github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP/main/images/" 
+            # --- End GitHub Image Base URL Configuration ---
+
             # Construct image URLs using Publication Number
+            # This column is always generated, assuming the image exists in GitHub
             df['image_url_processed'] = df[publication_number_col].apply(
                 lambda x: f"{github_image_base_url}{x}.png" if x else ""
             )
-            # Removed: st.success("URLs de imágenes procesadas.")
-            # Removed: st.info("Asegúrate de que el repositorio de GitHub y la carpeta 'images' sean públicos y que las imágenes existan con el nombre 'NUMERO_DE_PUBLICACION.png'.")
 
             # Combines the original title and summary to create a complete patent description
             df['Descripción Completa'] = df[original_title_col] + ". " + df[original_abstract_col]
@@ -239,87 +331,181 @@ with st.spinner(f"Inicializando base de datos de patentes..."):
 if df_patents is None or patent_embeddings is None:
     st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
              "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
-             "y que contenga las columnas 'Title (Original language)' y 'Abstract (Original language)'. "
-             "Se ignora mayúsculas/minúsculas y espacios extra en los nombres de las columnas.")
+             "y que contenga las columnas requeridas (ver mensaje de error anterior).")
     st.stop() # Stop the app if data can't be loaded
 
-# --- Section for problem input and search ---
-st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
-st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
+# --- Detail View Logic ---
+if st.session_state.selected_patent_idx is not None:
+    selected_idx = st.session_state.selected_patent_idx
+    patent = df_patents.iloc[selected_idx]
 
-
-# Fixed number of results, no slider
-MAX_RESULTS = 3
-
-# Use a form to capture the text input and button press together for better UX
-with st.form(key='search_form', clear_on_submit=False):
-    # This is the Streamlit text_area, now visible and primary for input
-    problem_description = st.text_area(
-        "Describe tu problema técnico o necesidad funcional:",
-        value="Necesito soluciones para la gestión eficiente de la producción de miel.",
-        height=68, # Required minimum height
-        label_visibility="visible", # Keep label visible
-        key="problem_description_input_area",
-        placeholder="Escribe aquí tu necesidad apícola..."
-    )
+    # Extract patent details for display
+    title = patent['title (original language)']
+    abstract = patent['abstract (original language)']
+    publication_number = patent['publication number']
+    assignee = patent['assignee - dwpi']
+    publication_country = patent['publication country']
+    image_url = patent['image_url_processed'] # Get processed image URL
     
-    # This is the Streamlit form submit button.
-    submitted = st.form_submit_button("Buscar Soluciones", type="primary")
+    # Default image for onerror, if needed
+    default_image_url = "https://placehold.co/250x250/cccccc/000000?text=No+Image"
 
-    # If the form is submitted
-    if submitted:
-        current_problem_description = problem_description.strip() # Direct access to text_area value
-
-        if not current_problem_description:
-            st.warning("Por favor, ingresa una descripción del problema.")
-        else:
-            with st.spinner("Buscando patentes relevantes..."):
-                try: # Start of the try block
-                    current_model = load_embedding_model()
-                    query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
-
-                    cosine_scores = util.cos_sim(query_embedding, patent_embeddings)[0]
-                    top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:MAX_RESULTS]
-
-                    if len(top_results_indices) == 0:
-                        st.info("No se encontraron patentes relevantes con la descripción proporcionada.")
-                    else:
-                        for i, idx in enumerate(top_results_indices):
-                            score = cosine_scores[idx].item()
-                            # Use the original (untranslated) title and abstract for display
-                            patent_title = df_patents.iloc[idx]['title (original language)']
-                            patent_summary = df_patents.iloc[idx]['abstract (original language)']
-                            patent_image_url = df_patents.iloc[idx]['image_url_processed'] # Get processed image URL
-                            
-                            # Use the processed publication number directly for consistency
-                            patent_number_found = df_patents.iloc[idx]['publication number']
-                            
-                            # Escape HTML-breaking characters in the content
-                            escaped_patent_title = html.escape(patent_title)
-                            escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
-                            
-                            # Default image for onerror, if needed
-                            # Simpler placeholder for local GitHub hosting context
-                            default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image" 
-                            
-                            card_html = f"""
-<div class="google-patent-card">
-    <div class="similarity-score">Similitud: {score:.2%}</div>
-    <div class="patent-image-container">
-        <img src="{patent_image_url if patent_image_url else default_image_url}" 
-             alt="[Image of {escaped_patent_title}]" class="patent-thumbnail" 
+    st.markdown("<div class='detail-view-container'>", unsafe_allow_html=True)
+    st.markdown(f"<h1 class='detail-header'>{html.escape(title)}</h1>", unsafe_allow_html=True)
+    
+    st.markdown("<div class='detail-content-wrapper'>", unsafe_allow_html=True)
+    
+    # Image Box
+    st.markdown(f"""
+    <div class="detail-image-box">
+        <img src="{image_url if image_url else default_image_url}" 
+             alt="[Image of {html.escape(title)}]" class="detail-image" 
              onerror="this.onerror=null;this.src='{default_image_url}';">
     </div>
-    <div class="google-patent-content-details">
-        <p class="google-patent-title">{escaped_patent_title}</p>
-        <p class="google-patent-summary">{escaped_patent_summary_short}</p>
-        <p class="google-patent-meta">Patente: {patent_number_found}</p>
+    """, unsafe_allow_html=True)
+
+    # Metadata and Summary Wrapper
+    st.markdown("<div class='detail-meta-summary-wrapper'>", unsafe_allow_html=True)
+    
+    # Metadata Table
+    st.markdown("""
+    <table class="detail-meta-table">
+        <tr>
+            <td>Número:</td>
+            <td>{0}</td>
+        </tr>
+        <tr>
+            <td>Solicitante:</td>
+            <td>{1}</td>
+        </tr>
+        <tr>
+            <td>País:</td>
+            <td>{2}</td>
+        </tr>
+    </table>
+    """.format(html.escape(publication_number), html.escape(assignee), html.escape(publication_country)), unsafe_allow_html=True)
+
+    # Summary Box
+    st.markdown(f"""
+    <div class="detail-summary-box">
+        <h4>Resumen:</h4>
+        <p>{html.escape(abstract)}</p>
     </div>
-</div>
-"""
-                            st.markdown(card_html, unsafe_allow_html=True)
-                            
+    """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True) # Close detail-meta-summary-wrapper
+    st.markdown("</div>", unsafe_allow_html=True) # Close detail-content-wrapper
+
+    # Back Button
+    if st.button("Volver a la búsqueda", key="back_to_search", help="Regresar a la lista de resultados"):
+        st.session_state.selected_patent_idx = None
+        st.rerun() # Rerun to refresh the view
+        
+    st.markdown("</div>", unsafe_allow_html=True) # Close detail-view-container
+
+# --- Main Search View Logic ---
+else:
+    st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
+    st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
+
+
+    # Fixed number of results, no slider
+    MAX_RESULTS = 3
+
+    # Use a form to capture the text input and button press together for better UX
+    with st.form(key='search_form', clear_on_submit=False):
+        # This is the Streamlit text_area, now visible and primary for input
+        problem_description = st.text_area(
+            "Describe tu problema técnico o necesidad funcional:",
+            value="Necesito soluciones para la gestión eficiente de la producción de miel.",
+            height=68, # Required minimum height
+            label_visibility="visible", # Keep label visible
+            key="problem_description_input_area",
+            placeholder="Escribe aquí tu necesidad apícola..."
+        )
+        
+        # This is the Streamlit form submit button.
+        submitted = st.form_submit_button("Buscar Soluciones", type="primary")
+
+        # If the form is submitted
+        if submitted:
+            current_problem_description = problem_description.strip() # Direct access to text_area value
+
+            if not current_problem_description:
+                st.warning("Por favor, ingresa una descripción del problema.")
+            else:
+                with st.spinner("Buscando patentes relevantes..."):
+                    try: # Start of the try block
+                        current_model = load_embedding_model()
+                        query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
+
+                        cosine_scores = util.cos_sim(query_embedding, patent_embeddings)[0]
+                        top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:MAX_RESULTS]
+
+                        if len(top_results_indices) == 0:
+                            st.info("No se encontraron patentes relevantes con la descripción proporcionada.")
+                        else:
+                            st.subheader("Resultados de la búsqueda:") # Added a subheader for clarity
+                            for i, idx in enumerate(top_results_indices):
+                                score = cosine_scores[idx].item()
+                                # Use the original (untranslated) title and abstract for display
+                                patent_title = df_patents.iloc[idx]['title (original language)']
+                                patent_summary = df_patents.iloc[idx]['abstract (original language)']
+                                patent_image_url = df_patents.iloc[idx]['image_url_processed'] # Get processed image URL
+                                
+                                # Use the processed publication number directly for consistency
+                                patent_number_found = df_patents.iloc[idx]['publication number']
+                                
+                                # Escape HTML-breaking characters in the content
+                                escaped_patent_title = html.escape(patent_title)
+                                escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
+                                
+                                # Default image for onerror, if needed
+                                default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image" 
+                                
+                                # Wrap each card in a form for clickability
+                                with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
+                                    card_html = f"""
+    <div class="google-patent-card">
+        <div class="similarity-score">Similitud: {score:.2%}</div>
+        <div class="patent-image-container">
+            <img src="{patent_image_url if patent_image_url else default_image_url}" 
+                 alt="[Image of {escaped_patent_title}]" class="patent-thumbnail" 
+                 onerror="this.onerror=null;this.src='{default_image_url}';">
+        </div>
+        <div class="google-patent-content-details">
+            <p class="google-patent-title">{escaped_patent_title}</p>
+            <p class="google-patent-summary">{escaped_patent_summary_short}</p>
+            <p class="google-patent-meta">Patente: {patent_number_found}</p>
+        </div>
+    </div>
+    """
+                                    st.markdown(card_html, unsafe_allow_html=True)
+                                    
+                                    # Hidden button that gets clicked by JS
+                                    clicked_card = st.form_submit_button(
+                                        label="Ver Detalles",
+                                        key=f"hidden_card_button_{idx}",
+                                        help="Haz clic para ver los detalles de la patente"
+                                    )
+                                    # If the hidden button is clicked, store the index and rerun
+                                    if clicked_card:
+                                        st.session_state.selected_patent_idx = idx
+                                        st.rerun()
+
+                                # Inject JavaScript to make the div clickable
+                                st.markdown(f"""
+    <script>
+        const cardDiv_{idx} = document.querySelector('div[data-testid="stForm"] > div > div > div.google-patent-card');
+        const hiddenButton_{idx} = document.querySelector('button[data-testid="stFormSubmitButton"][key="hidden_card_button_{idx}"]');
+        if (cardDiv_{idx} && hiddenButton_{idx}) {{
+            cardDiv_{idx}.onclick = () => {{
+                hiddenButton_{idx}.click();
+            }};
+        }}
+    </script>
+    """, unsafe_allow_html=True)
+                                
                 except Exception as e: # End of the try block, start of the except block
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
-# No custom JavaScript for syncing is needed now.
