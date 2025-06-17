@@ -230,40 +230,22 @@ MAGNIFYING_GLASS_SVG = """
 st.markdown("""
 <script>
     // Function to set up click listener for patent cards
-    function setupCardClickListener(cardFormKey, hiddenButtonKey) {
-        // Find the form associated with the card
-        const form = document.querySelector(`div[data-testid="stForm"] > div > form[data-testid="stForm"][key="${cardFormKey}"]`);
-        if (!form) {
-            console.warn(`Form with key ${cardFormKey} not found.`);
-            return;
-        }
+    function setupCardClickListener(cardDivId, hiddenButtonKey) {
+        const cardDiv = document.getElementById(cardDivId);
+        const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
 
-        // Find the Google Patent Card div inside this form
-        const cardDiv = form.querySelector('.google-patent-card');
-        if (!cardDiv) {
-            console.warn(`Card div not found inside form ${cardFormKey}.`);
-            return;
-        }
-
-        // Find the hidden Streamlit submit button inside this form
-        const hiddenButton = form.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
-        if (!hiddenButton) {
-            console.warn(`Hidden button with key ${hiddenButtonKey} not found.`);
-            return;
-        }
-
-        // Assign the click event to the Google Patent Card div
-        // Use a flag to prevent multiple assignments
-        if (!cardDiv._hasClickListener) {
-            cardDiv.onclick = (event) => {
-                // Prevent default behavior (e.g., text selection)
-                event.preventDefault();
-                // Stop event propagation to prevent it from affecting other Streamlit elements
-                event.stopPropagation();
-                // Programmatically click the hidden Streamlit submit button
-                hiddenButton.click();
-            };
-            cardDiv._hasClickListener = true; // Mark as having listener
+        if (cardDiv && hiddenButton) {
+            // Use a flag to prevent multiple assignments
+            if (!cardDiv._hasClickListener) {
+                cardDiv.onclick = (event) => {
+                    event.preventDefault(); // Prevent default behavior (e.g., text selection)
+                    event.stopPropagation(); // Stop event propagation
+                    hiddenButton.click(); // Programmatically click the hidden Streamlit submit button
+                };
+                cardDiv._hasClickListener = true; // Mark as having listener
+            }
+        } else {
+            console.warn(`Elements not found for setupCardClickListener: cardDivId=${cardDivId}, hiddenButtonKey=${hiddenButtonKey}`);
         }
     }
 </script>
@@ -541,6 +523,7 @@ else:
                                         st.rerun()
 
                                 # Call JavaScript to set up click listener for this specific card
+                                # This is the line where the SyntaxError was likely occurring due to unescaped {} in the JS f-string
                                 st.markdown(f"<script>setupCardClickListener('patent_card_div_{idx}', 'hidden_card_button_{idx}');</script>", unsafe_allow_html=True)
                                 
                 except Exception as e: # End of the try block, start of the except block
