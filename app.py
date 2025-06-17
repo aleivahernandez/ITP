@@ -11,7 +11,7 @@ st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas
 # No session state for selected patent in this version
 # Removed: if 'selected_patent_idx' not in st.session_state: st.session_state.selected_patent_idx = None
 
-# Custom CSS for a better visual match to Google Patents style (reverted to simpler version)
+# Custom CSS for a better visual match to Google Patents style (simplified for direct st. components)
 st.markdown(
     """
     <script src="https://cdn.tailwindcss.com"></script>
@@ -155,12 +155,13 @@ def process_patent_data(file_path):
             df.columns = df.columns.str.strip().str.lower()
 
             # Define required columns after normalization
+            # IMPORTANT: Reverted to only require title, abstract, and publication number for images
             required_columns_normalized = [
                 'title (original language)',
                 'abstract (original language)',
-                'publication number',
-                'assignee - dwpi',        # New required column
-                'publication country',    # New required column
+                'publication number', # Required for image URL construction
+                # Removed 'assignee - dwpi',
+                # Removed 'publication country',
             ]
             
             # Check if all required columns exist after normalization
@@ -174,15 +175,13 @@ def process_patent_data(file_path):
             original_title_col = 'title (original language)'
             original_abstract_col = 'abstract (original language)'
             publication_number_col = 'publication number'
-            assignee_dwpi_col = 'assignee - dwpi'
-            publication_country_col = 'publication country'
+            # Removed assignee_dwpi_col and publication_country_col
 
             # Fill null values with empty strings
             df[original_title_col] = df[original_title_col].fillna('')
             df[original_abstract_col] = df[original_abstract_col].fillna('')
             df[publication_number_col] = df[publication_number_col].fillna('')
-            df[assignee_dwpi_col] = df[assignee_dwpi_col].fillna('')
-            df[publication_country_col] = df[publication_country_col].fillna('')
+            # Removed fillna for assignee and country
 
             # --- Configure GitHub Image Base URL ---
             github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP/main/images/" 
