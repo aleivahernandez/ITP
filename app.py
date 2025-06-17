@@ -299,7 +299,3 @@ with st.form(key='search_form', clear_on_submit=False):
                             
                 except Exception as e:
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
-
-                except Exception as e:
-
-                    st.error(f"Ocurrió un error durante la búsqueda: {e}")
