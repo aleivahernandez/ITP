@@ -82,26 +82,13 @@ st.markdown(
         /* --- CSS para estilizar componentes nativos de Streamlit --- */
         /* Estiliza el st.text_area para parecerse al input de la imagen */
         textarea[aria-label="Describe tu problema técnico o necesidad funcional:"] {
-            /* This textarea itself should have no border, as its parent div will provide it */
-            border: none !important;
-            outline: none !important;
-            box-shadow: none !important;
-            padding: 0 !important; /* Remove internal padding if container has it */
-            margin: 0 !important; /* Remove internal margin */
-            font-size: 1.125rem !important; /* text-lg */
-            flex-grow: 1; /* Make it take available space */
-            background: transparent !important;
-            resize: none !important; /* Prevent manual resizing */
-        }
-        /* Estiliza el CONTENEDOR del st.text_area para el borde y el redondeo */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div[data-testid="stTextArea"] {
-            border-radius: 0.75rem !important; /* Rounded corners, not fully circular */
-            border: 1px solid #d1d5db !important; /* Light gray border, no green */
+            border-radius: 9999px !important; /* Fully rounded */
+            border: 1px solid #d1d5db !important; /* Changed from green to light gray border */
             padding: 0.5rem 1.5rem !important; /* Adjust padding */
             box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+            font-size: 1.125rem !important; /* text-lg */
             margin-bottom: 1rem; /* Space below the input */
-            display: flex; /* Use flex to align content inside */
-            align-items: center; /* Center vertically */
+            resize: none !important; /* Prevent manual resizing */
         }
         /* Estiliza el botón de envío del formulario */
         button[data-testid="stFormSubmitButton"] {
@@ -193,13 +180,6 @@ def process_patent_data(file_path):
             df[original_title_col] = df[original_title_col].fillna('')
             df[original_abstract_col] = df[original_abstract_col].fillna('')
 
-            # No translation step
-            # Removed: st.write("Traduciendo títulos y resúmenes...")
-            # Removed: df['Titulo Traducido'] = df[original_title_col].apply(lambda x: translate_text(x, 'es'))
-            # Removed: df['Resumen Traducido'] = df[original_abstract_col].apply(lambda x: translate_text(x, 'es'))
-            # Removed: st.success("Traducción completada.")
-
-
             # Combines the original title and summary to create a complete patent description
             df['Descripción Completa'] = df[original_title_col] + ". " + df[original_abstract_col]
 
@@ -235,13 +215,13 @@ with st.spinner(f"Inicializando base de datos de patentes..."):
 if df_patents is None or patent_embeddings is None:
     st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
              "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
-             "y que contenga las columnas 'Title (Original language)' y 'Abstract (Original Language)'. "
+             "y que contenga las columnas 'Title (Original language)' y 'Abstract (Original language)'. "
              "Se ignora mayúsculas/minúsculas y espacios extra en los nombres de las columnas.")
     st.stop() # Stop the app if data can't be loaded
 
 # --- Section for problem input and search ---
 st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
-st.markdown("<p class='text-gray-600 mb-6'></p>", unsafe_allow_html=True) # Removed "Describe tu problema técnico o necesidad funcional"
+st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
 
 
 # Fixed number of results, no slider
@@ -252,10 +232,10 @@ with st.form(key='search_form', clear_on_submit=False):
     # This is the Streamlit text_area, now visible and primary for input
     # It will be styled with CSS to look like the rounded search bar.
     problem_description = st.text_area(
-        "Describe tu problema técnico o necesidad funcional:", # Label is now the main descriptive text
+        "Describe tu problema técnico o necesidad funcional:",
         value="Necesito soluciones para la gestión eficiente de la producción de miel.",
         height=68, # Required minimum height
-        label_visibility="visible", # Keep label visible to serve as the main description
+        label_visibility="visible", # We will hide the label with CSS later
         key="problem_description_input_area", # Renamed key for clarity
         placeholder="Escribe aquí tu necesidad apícola..." # Added placeholder
     )
