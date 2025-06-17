@@ -67,26 +67,6 @@ st.markdown(
         }
 
         /* --- Google Patents style for patent results --- */
-        /* IMPORTANT: This style targets the Streamlit-generated div that wraps the st.form_submit_button */
-        /* and its children (the actual button). We're making this div the clickable area. */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] {
-             /* This targets the div that contains the hidden button for card clicks */
-             /* We need to make this div span the entire card visually and be clickable */
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 5; /* Below score, above card content */
-            opacity: 0; /* Make it invisible */
-            cursor: pointer; /* Show pointer on hover */
-            /* Ensure the actual button inside is also hidden if needed */
-        }
-        /* This hides the actual Streamlit button element that gets clicked */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] > * {
-            display: none !important;
-        }
-
         .google-patent-card {
             background-color: #ffffff; /* White background */
             border: 1px solid #dadce0; /* Light gray border */
@@ -98,7 +78,7 @@ st.markdown(
             position: relative; /* For similarity score */
             display: flex; /* Use flexbox for image and content layout */
             align-items: flex-start; /* Align items to the top */
-            /* Removed cursor: pointer here, as the hidden button div will handle it */
+            /* Removed cursor: pointer here, as the hidden button will handle it */
         }
         .google-patent-card:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
