@@ -72,9 +72,32 @@ st.markdown(
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
             transition: box-shadow 0.2s ease;
             position: relative; /* For similarity score */
+            display: flex; /* Use flexbox for image and content layout */
+            align-items: flex-start; /* Align items to the top */
         }
         .google-patent-card:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
+        }
+        .patent-image-container {
+            flex-shrink: 0; /* Prevent image container from shrinking */
+            width: 120px; /* Fixed width for the image container */
+            height: 120px; /* Fixed height for the image container */
+            margin-right: 1rem; /* Space between image and text */
+            border-radius: 4px; /* Slightly rounded corners for the image box */
+            overflow: hidden; /* Hide overflowing parts of the image */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0; /* Placeholder background */
+        }
+        .patent-thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Ensure image fits without cropping, maintaining aspect ratio */
+            border-radius: 4px;
+        }
+        .google-patent-content-details { /* New class to wrap text content */
+            flex-grow: 1; /* Allow content to take remaining space */
         }
         .google-patent-title {
             font-size: 1.15rem;
@@ -99,7 +122,7 @@ st.markdown(
             position: absolute;
             top: 0.75rem;
             right: 0.75rem;
-            background-color: #e0f2f7; /* Light blue background for contrast */
+            background-color: #e0f2f7; /* Light blue background to contrast */
             color: #20c997; /* Teal color */
             padding: 0.15rem 0.4rem;
             border-radius: 0.4rem;
@@ -111,9 +134,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-# No Magnifying Glass SVG needed outside CSS
-# MAGNIFYING_GLASS_SVG = """..."""
 
 # --- Functions for loading and processing data/models ---
 
@@ -130,10 +150,26 @@ def load_embedding_model():
     return model
 
 @st.cache_data
+def get_drive_direct_link(drive_link):
+    """
+    Converts a public Google Drive share link to a direct download link.
+    Returns the original link if it's not a recognized Google Drive share link.
+    """
+    if pd.isna(drive_link) or not isinstance(drive_link, str):
+        return ""
+    if "drive.google.com" in drive_link and "/view" in drive_link:
+        try:
+            file_id = drive_link.split('/d/')[1].split('/view')[0]
+            return f"https://docs.google.com/uc?export=download&id={file_id}"
+        except IndexError:
+            return drive_link # Return original if ID parsing fails
+    return drive_link # Return original link if not a recognizable Google Drive share link
+
+@st.cache_data
 def process_patent_data(file_path):
     """
     Processes the patent file from a local path (CSV or Excel).
-    Reads the file, combines title and summary, and generates the embeddings.
+    Reads the file, combines title and summary, gets image URLs, and generates the embeddings.
     `st.cache_data` is used to cache processed data
     and generated embeddings, avoiding unnecessary reprocessing.
     """
@@ -163,16 +199,23 @@ def process_patent_data(file_path):
             # Access columns using their normalized names
             original_title_col = 'title (original language)'
             original_abstract_col = 'abstract (original language)'
+            image_col = 'image' # Normalized name for the 'Image' column
 
             # Fill null values with empty strings
             df[original_title_col] = df[original_title_col].fillna('')
             df[original_abstract_col] = df[original_abstract_col].fillna('')
+            if image_col in df.columns:
+                df[image_col] = df[image_col].fillna('')
+                st.write("Procesando URLs de imágenes (Google Drive si aplica)...")
+                df['image_url_processed'] = df[image_col].apply(get_drive_direct_link)
+                st.success("URLs de imágenes procesadas.")
+            else:
+                df['image_url_processed'] = "" # Add empty column if 'Image' not present
 
             # Combines the original title and summary to create a complete patent description
             df['Descripción Completa'] = df[original_title_col] + ". " + df[original_abstract_col]
 
             # Load the embedding model INSIDE this cached function
-            # Since load_embedding_model is also cached, it will only run once
             model_instance = load_embedding_model()
 
             # Generates embeddings for all patent descriptions using the loaded model instance
@@ -221,7 +264,7 @@ with st.form(key='search_form', clear_on_submit=False):
         "Describe tu problema técnico o necesidad funcional:",
         value="Necesito soluciones para la gestión eficiente de la producción de miel.",
         height=68, # Required minimum height
-        label_visibility="visible", # We will hide the label with CSS later
+        label_visibility="visible", # Keep label visible
         key="problem_description_input_area",
         placeholder="Escribe aquí tu necesidad apícola..."
     )
@@ -252,6 +295,7 @@ with st.form(key='search_form', clear_on_submit=False):
                             # Use the original (untranslated) title and abstract for display
                             patent_title = df_patents.iloc[idx]['title (original language)']
                             patent_summary = df_patents.iloc[idx]['abstract (original language)']
+                            patent_image_url = df_patents.iloc[idx]['image_url_processed'] # Get processed image URL
                             
                             patent_number_found = 'N/A'
                             if 'numero de patente' in df_patents.columns:
@@ -264,14 +308,23 @@ with st.form(key='search_form', clear_on_submit=False):
                             # Escape HTML-breaking characters in the content
                             escaped_patent_title = html.escape(patent_title)
                             escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
-
-                            # Display using new Google Patents-like HTML structure
+                            
+                            # Default image for onerror, if needed
+                            default_image_url = "https://placehold.co/120x120/E0F2F7/20C997?text=No+Image"
+                            
                             card_html = f"""
 <div class="google-patent-card">
     <div class="similarity-score">Similitud: {score:.2%}</div>
-    <p class="google-patent-title">{escaped_patent_title}</p>
-    <p class="google-patent-summary">{escaped_patent_summary_short}</p>
-    <p class="google-patent-meta">Patente: {patent_number_found}</p>
+    <div class="patent-image-container">
+        <img src="{patent_image_url if patent_image_url else default_image_url}" 
+             alt="" class="patent-thumbnail" 
+             onerror="this.onerror=null;this.src='{default_image_url}';">
+    </div>
+    <div class="google-patent-content-details">
+        <p class="google-patent-title">{escaped_patent_title}</p>
+        <p class="google-patent-summary">{escaped_patent_summary_short}</p>
+        <p class="google-patent-meta">Patente: {patent_number_found}</p>
+    </div>
 </div>
 """
                             st.markdown(card_html, unsafe_allow_html=True)
