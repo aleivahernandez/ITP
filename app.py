@@ -8,10 +8,111 @@ import html
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
 
-# No custom CSS for styling in this version
-# Removed: st.markdown("""...style...""", unsafe_allow_html=True)
+# Custom CSS for a better visual match to Google Patents style
+st.markdown(
+    """
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0f2f7; /* Light blue background for the page */
+        }
+        .stApp {
+            max-width: 800px; /* Constrain the app width */
+            margin: 2rem auto; /* Center the app on the page */
+            background-color: #ffffff; /* White background for the app container */
+            border-radius: 1.5rem; /* Rounded Corners */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            padding: 2.5rem; /* Padding inside the app container */
+        }
+        /* Style for the main search input container */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div[data-testid="stTextArea"] {
+            border-radius: 9999px !important; /* Fully rounded */
+            border: 1px solid #d1d5db !important; /* Light gray border */
+            padding: 0.5rem 1.5rem !important; /* Adjust padding */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+            font-size: 1.125rem !important; /* text-lg */
+            margin-bottom: 1rem; /* Space below the input */
+            resize: none !important; /* Prevent manual resizing */
+        }
+        /* Style for the submit button */
+        button[data-testid="stFormSubmitButton"] {
+            background-color: #20c997 !important;
+            color: white !important;
+            border-radius: 0.75rem !important; /* Rounded corners */
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            transition: background-color 0.2s ease !important;
+            display: block !important; /* Make it a block element */
+            margin: 0 auto 2rem auto !important; /* Center the button and add margin below */
+            width: fit-content; /* Adjust width to content */
+        }
+        button[data-testid="stFormSubmitButton"]:hover {
+            background-color: #1aae89 !important;
+        }
+        /* Adjust default paragraph font size for st.markdown */
+        .st-emotion-cache-16idsys p, 
+        .st-emotion-cache-1s2a8v p { 
+            font-size: 1rem;
+        }
+        /* Hide the default label for st.text_area */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] {
+            display: none !important;
+        }
 
-# Removed: Magnifying glass SVG as it was part of custom HTML/CSS
+        /* --- Google Patents style for patent results --- */
+        .google-patent-card {
+            background-color: #ffffff; /* White background */
+            border: 1px solid #dadce0; /* Light gray border */
+            border-radius: 8px; /* Slightly rounded corners */
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            transition: box-shadow 0.2s ease;
+            position: relative; /* For similarity score */
+        }
+        .google-patent-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
+        }
+        .google-patent-title {
+            font-size: 1.15rem;
+            font-weight: 600; /* Semi-bold */
+            color: #1a0dab; /* Google blue link color */
+            margin-bottom: 0.4rem;
+            line-height: 1.3;
+        }
+        .google-patent-summary {
+            font-size: 0.9rem;
+            color: #4d5156; /* Darker gray for text */
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+        .google-patent-meta {
+            font-size: 0.8rem;
+            color: #70757a; /* Lighter gray for metadata */
+            margin-top: 0.5rem;
+        }
+        /* Adjusting similarity score position for Google Patents style */
+        .similarity-score {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #e0f2f7; /* Light blue background for contrast */
+            color: #20c997; /* Teal color */
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# No Magnifying Glass SVG needed outside CSS
 # MAGNIFYING_GLASS_SVG = """..."""
 
 # --- Functions for loading and processing data/models ---
@@ -25,7 +126,7 @@ def load_embedding_model():
     """
     with st.spinner("Cargando el modelo de embeddings (esto puede tardar un momento)..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        # Removed: st.success("Modelo de embeddings cargado correctamente.")
+        st.success("Modelo de embeddings cargado correctamente.")
     return model
 
 @st.cache_data
@@ -88,7 +189,6 @@ def process_patent_data(file_path):
 # --- Automatic local Excel file loading section ---
 
 # The name of the local patent file in the same repository
-# User confirmed it's 'patentes.xlsx' (Excel)
 excel_file_name = "patentes.xlsx" 
 
 # Initialize df_patents and patent_embeddings
@@ -121,7 +221,7 @@ with st.form(key='search_form', clear_on_submit=False):
         "Describe tu problema técnico o necesidad funcional:",
         value="Necesito soluciones para la gestión eficiente de la producción de miel.",
         height=68, # Required minimum height
-        label_visibility="visible", # Keep label visible
+        label_visibility="visible", # We will hide the label with CSS later
         key="problem_description_input_area",
         placeholder="Escribe aquí tu necesidad apícola..."
     )
@@ -150,32 +250,32 @@ with st.form(key='search_form', clear_on_submit=False):
                         for i, idx in enumerate(top_results_indices):
                             score = cosine_scores[idx].item()
                             # Use the original (untranslated) title and abstract for display
-                            # Access columns using their normalized names
                             patent_title = df_patents.iloc[idx]['title (original language)']
                             patent_summary = df_patents.iloc[idx]['abstract (original language)']
                             
-                            # It's possible 'numero de patente' might not exist in the new dataset.
-                            # We can also check if a column like 'Publication Number' or 'Patent Number' exists and and use that.
-                            # Access columns using their normalized names
                             patent_number_found = 'N/A'
                             if 'numero de patente' in df_patents.columns:
                                 patent_number_found = df_patents.iloc[idx]['numero de patente']
-                            elif 'publication number' in df_patents.columns: # Check normalized names
+                            elif 'publication number' in df_patents.columns: 
                                 patent_number_found = df_patents.iloc[idx]['publication number']
-                            elif 'patent number' in df_patents.columns: # Check normalized names
+                            elif 'patent number' in df_patents.columns: 
                                 patent_number_found = df_patents.iloc[idx]['patent number']
                             
                             # Escape HTML-breaking characters in the content
                             escaped_patent_title = html.escape(patent_title)
                             escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
 
-                            # Display using standard Streamlit components
-                            st.subheader(f"**{i+1}. {escaped_patent_title}**")
-                            st.write(f"Similitud: {score:.2%}")
-                            st.write(f"Resumen: {escaped_patent_summary_short}")
-                            st.write(f"Patente: {patent_number_found}")
-                            st.markdown("---") # Separator between patents
-
+                            # Display using new Google Patents-like HTML structure
+                            card_html = f"""
+<div class="google-patent-card">
+    <div class="similarity-score">Similitud: {score:.2%}</div>
+    <p class="google-patent-title">{escaped_patent_title}</p>
+    <p class="google-patent-summary">{escaped_patent_summary_short}</p>
+    <p class="google-patent-meta">Patente: {patent_number_found}</p>
+</div>
+"""
+                            st.markdown(card_html, unsafe_allow_html=True)
+                            
                 except Exception as e: # End of the try block, start of the except block
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
