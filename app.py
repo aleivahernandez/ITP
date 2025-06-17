@@ -72,7 +72,7 @@ st.markdown(
             align-items: flex-start;
             background-color: #f0fdf4; /* Light green background */
             border-left: 5px solid #20c997; /* Teal left border */
-            border-radius: 0.75rem; /* Rounded Corners */
+            border-radius: 0.75rem; /* Rounded corners */
             padding: 1.5rem;
             margin-bottom: 1rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
@@ -118,27 +118,8 @@ st.markdown(
         .stSpinner > div {
             border-top-color: #20c997 !important;
         }
-        /* --- CSS para ocultar completamente componentes nativos de Streamlit --- */
-        /* Oculta los contenedores principales de st.text_area */
-        div[data-testid="stForm"] div[data-testid="stVerticalBlock"] > div > div[data-testid="stTextArea"], /* Target the specific div wrapping st.text_area */
-        div[data-testid="stForm"] div[data-testid^="stHorizontalBlock"] > div > div[data-testid="stTextArea"] {
-            display: none !important;
-            height: 0 !important;
-            width: 0 !important;
-            overflow: hidden !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
-        }
-        /* Oculta la etiqueta del st.text_area */
-        div[data-testid="stForm"] div[data-testid^="stVerticalBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"],
-        div[data-testid="stForm"] div[data-testid^="stHorizontalBlock"] > div > label[data-testid="stWidgetLabel"][for^="textarea"] {
-            display: none !important;
-        }
-
-        /* Oculta completamente el st.form_submit_button */
-        div[data-testid="stForm"] div[data-testid^="stVerticalBlock"] > div > button[data-testid="stFormSubmitButton"], /* Target the specific div wrapping st.form_submit_button */
-        div[data-testid="stForm"] div[data-testid^="stHorizontalBlock"] > div > button[data-testid="stFormSubmitButton"] {
+        /* --- CSS para ocultar completamente el contenedor de widgets funcionales --- */
+        #streamlit_functional_widgets_wrapper {
             display: none !important;
             height: 0 !important;
             width: 0 !important;
@@ -283,6 +264,8 @@ with st.form(key='search_form', clear_on_submit=False):
     
     # These Streamlit widgets are present only for functionality.
     # They are completely hidden by CSS rules.
+    st.markdown('<div id="streamlit_functional_widgets_wrapper">', unsafe_allow_html=True) # Wrapper div to hide all Streamlit widgets
+
     problem_description_from_form = st.text_area(
         "Hidden input for problem description", # Label, though hidden
         value=initial_search_value, # Initial value
@@ -294,6 +277,8 @@ with st.form(key='search_form', clear_on_submit=False):
     )
     
     submitted = st.form_submit_button("Buscar Soluciones", type="primary")
+
+    st.markdown('</div>', unsafe_allow_html=True) # Close the hidden widgets wrapper
 
     # If the form is submitted via the custom HTML button (which triggers st.form_submit_button)
     if submitted:
