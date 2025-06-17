@@ -147,7 +147,7 @@ def load_embedding_model():
     """
     with st.spinner("Cargando el modelo de embeddings (esto puede tardar un momento)..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        st.success("Modelo de embeddings cargado correctamente.")
+        # Removed: st.success("Modelo de embeddings cargado correctamente.")
     return model
 
 # Removed get_drive_direct_link function. Now assume URLs are directly embeddable.
@@ -203,8 +203,8 @@ def process_patent_data(file_path):
             df['image_url_processed'] = df[publication_number_col].apply(
                 lambda x: f"{github_image_base_url}{x}.png" if x else ""
             )
-            st.success("URLs de imágenes procesadas.")
-            st.info("Asegúrate de que el repositorio de GitHub y la carpeta 'images' sean públicos y que las imágenes existan con el nombre 'NUMERO_DE_PUBLICACION.png'.")
+            # Removed: st.success("URLs de imágenes procesadas.")
+            # Removed: st.info("Asegúrate de que el repositorio de GitHub y la carpeta 'images' sean públicos y que las imágenes existan con el nombre 'NUMERO_DE_PUBLICACION.png'.")
 
             # Combines the original title and summary to create a complete patent description
             df['Descripción Completa'] = df[original_title_col] + ". " + df[original_abstract_col]
@@ -239,7 +239,7 @@ with st.spinner(f"Inicializando base de datos de patentes..."):
 if df_patents is None or patent_embeddings is None:
     st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
              "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
-             "y que contenga las columnas 'Title (Original language)', 'Abstract (Original language)' y 'Publication Number'. "
+             "y que contenga las columnas 'Title (Original language)' y 'Abstract (Original language)'. "
              "Se ignora mayúsculas/minúsculas y espacios extra en los nombres de las columnas.")
     st.stop() # Stop the app if data can't be loaded
 
@@ -323,4 +323,3 @@ with st.form(key='search_form', clear_on_submit=False):
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
 # No custom JavaScript for syncing is needed now.
-
