@@ -67,6 +67,26 @@ st.markdown(
         }
 
         /* --- Google Patents style for patent results --- */
+        /* IMPORTANT: This style targets the Streamlit-generated div that wraps the st.form_submit_button */
+        /* and its children (the actual button). We're making this div the clickable area. */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] {
+             /* This targets the div that contains the hidden button for card clicks */
+             /* We need to make this div span the entire card visually and be clickable */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5; /* Below score, above card content */
+            opacity: 0; /* Make it invisible */
+            cursor: pointer; /* Show pointer on hover */
+            /* Ensure the actual button inside is also hidden if needed */
+        }
+        /* This hides the actual Streamlit button element that gets clicked */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] > * {
+            display: none !important;
+        }
+
         .google-patent-card {
             background-color: #ffffff; /* White background */
             border: 1px solid #dadce0; /* Light gray border */
@@ -78,7 +98,7 @@ st.markdown(
             position: relative; /* For similarity score */
             display: flex; /* Use flexbox for image and content layout */
             align-items: flex-start; /* Align items to the top */
-            cursor: pointer; /* Indicate it's clickable */
+            /* Removed cursor: pointer here, as the hidden button div will handle it */
         }
         .google-patent-card:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
@@ -135,85 +155,6 @@ st.markdown(
             font-weight: 600;
             z-index: 10;
         }
-        /* --- Detail View Styles --- */
-        .detail-view-container {
-            background-color: #ffffff;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            padding: 2.5rem;
-            margin-top: 2rem;
-        }
-        .detail-header {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 1.5rem;
-        }
-        .detail-content-wrapper {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
-        }
-        .detail-image-box {
-            flex-shrink: 0;
-            width: 250px; /* Larger image in detail view */
-            height: 250px;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
-        }
-        .detail-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border-radius: 8px;
-        }
-        .detail-meta-summary-wrapper {
-            flex-grow: 1;
-            min-width: 300px; /* Ensure it doesn't get too small */
-        }
-        .detail-meta-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1.5rem;
-        }
-        .detail-meta-table td {
-            padding: 0.5rem 0;
-            vertical-align: top;
-        }
-        .detail-meta-table td:first-child {
-            font-weight: 600;
-            color: #4d5156;
-            width: 120px; /* Fixed width for labels */
-        }
-        .detail-meta-table td:last-child {
-            color: #4d5156;
-        }
-        .detail-summary-box {
-            background-color: #f8f9fa; /* Lighter background for summary */
-            border: 1px solid #e8eaed;
-            border-radius: 8px;
-            padding: 1rem;
-            font-size: 0.95rem;
-            color: #3c4043;
-            line-height: 1.6;
-        }
-        .back-button {
-            background-color: #607d8b !important; /* Grey-blue color */
-            color: white !important;
-            border-radius: 0.5rem !important;
-            padding: 0.75rem 1.25rem !important;
-            font-weight: 500 !important;
-            margin-top: 1.5rem !important;
-        }
-        .back-button:hover {
-            background-color: #455a64 !important; /* Darker grey-blue on hover */
-        }
     </style>
     """,
     unsafe_allow_html=True
@@ -225,35 +166,6 @@ MAGNIFYING_GLASS_SVG = """
     <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
 </svg>
 """
-
-# Inject JavaScript function for card click listener
-# Note: Using triple quotes to define a multi-line string. No f-string formatting here.
-JS_CARD_CLICK_LISTENER = """
-<script>
-    // Function to set up click listener for patent cards
-    function setupCardClickListener(cardDivId, hiddenButtonKey) {
-        const cardDiv = document.getElementById(cardDivId);
-        // Ensure to select the button that is inside the form with the specific key
-        const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
-
-        if (cardDiv && hiddenButton) {
-            // Use a flag to prevent multiple assignments
-            if (!cardDiv._hasClickListener) {
-                cardDiv.onclick = (event) => {
-                    event.preventDefault(); // Prevent default behavior (e.g., text selection)
-                    event.stopPropagation(); // Stop event propagation
-                    hiddenButton.click(); // Programmatically click the hidden Streamlit submit button
-                };
-                cardDiv._hasClickListener = true; // Mark as having listener
-            }
-        } else {
-            console.warn(`Elements not found for setupCardClickListener: cardDivId=${cardDivId}, hiddenButtonKey=${hiddenButtonKey}`);
-        }
-    }
-</script>
-"""
-st.markdown(JS_CARD_CLICK_LISTENER, unsafe_allow_html=True)
-
 
 # --- Functions for loading and processing data/models ---
 
