@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
-import re # Import the re module for regular expressions
+# Removed: import re # Not needed as get_drive_direct_link is removed
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -150,32 +150,13 @@ def load_embedding_model():
         st.success("Modelo de embeddings cargado correctamente.")
     return model
 
-@st.cache_data
-def get_drive_direct_link(drive_link):
-    """
-    Converts a public Google Drive share link to a direct download link.
-    Handles multiple common Google Drive URL formats.
-    Returns the original link if it's not a recognized Google Drive share link or is empty.
-    """
-    if pd.isna(drive_link) or not isinstance(drive_link, str) or not drive_link.strip():
-        return "" # Return empty string for NaN or empty links
-
-    # Regex to extract file ID from various Google Drive share/view/open links
-    match = re.search(r'(?:id=)([a-zA-Z0-9_-]+)|(?:/d/([a-zA-Z0-9_-]+)(?:/view|/edit|/?$))', drive_link)
-    if match:
-        file_id = match.group(1) or match.group(2) # Get ID from either capture group
-        if file_id:
-            # This is the most reliable direct download link format for public files
-            return f"https://drive.google.com/uc?export=download&id={file_id}"
-
-    # If no specific pattern is matched, return original link
-    return drive_link
+# Removed get_drive_direct_link function. Now assume URLs are directly embeddable.
 
 @st.cache_data
 def process_patent_data(file_path):
     """
     Processes the patent file from a local path (CSV or Excel).
-    Reads the file, combines title and summary, gets image URLs, and generates the embeddings.
+    Reads the file, combines title and summary, gets image URLs (from GitHub), and generates the embeddings.
     `st.cache_data` is used to cache processed data
     and generated embeddings, avoiding unnecessary reprocessing.
     """
@@ -194,33 +175,36 @@ def process_patent_data(file_path):
             df.columns = df.columns.str.strip().str.lower()
 
             # Define required columns after normalization
-            required_columns_normalized = ['title (original language)', 'abstract (original language)']
+            required_columns_normalized = ['title (original language)', 'abstract (original language)', 'publication number'] # Added 'publication number' to required
             
             # Check if all required columns exist after normalization
             if not all(col in df.columns for col in required_columns_normalized):
-                st.error(f"El archivo debe contener las columnas: '{required_columns_normalized[0]}' y '{required_columns_normalized[1]}'. "
+                st.error(f"El archivo debe contener las columnas: '{required_columns_normalized[0]}', '{required_columns_normalized[1]}' y '{required_columns_normalized[2]}'. "
                          "Por favor, revisa que los nombres de las columnas sean exactos (ignorando mayúsculas/minúsculas y espacios extra).")
                 return None, None
 
             # Access columns using their normalized names
             original_title_col = 'title (original language)'
             original_abstract_col = 'abstract (original language)'
-            image_col = 'image' # Normalized name for the 'Image' column
+            publication_number_col = 'publication number' # Column for image filename
+
+            # --- Configure GitHub Image Base URL ---
+            # IMPORTANT: Using the URL provided by the user
+            github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP/main/images/" 
+            # --- End GitHub Image Base URL Configuration ---
 
             # Fill null values with empty strings
             df[original_title_col] = df[original_title_col].fillna('')
             df[original_abstract_col] = df[original_abstract_col].fillna('')
-            
-            if image_col in df.columns:
-                df[image_col] = df[image_col].fillna('')
-                st.write("Procesando URLs de imágenes (Google Drive si aplica)... **Asegúrate de que los enlaces sean públicos y con acceso de lector.**")
-                df['image_url_processed'] = df[image_col].apply(get_drive_direct_link)
-                # Removed: st.info("Primeras 5 URLs de imágenes procesadas (para depuración - copia y pega en una ventana de incógnito para probar):")
-                # Removed: for i, url in enumerate(df['image_url_processed'].head(5)):
-                # Removed: st.write(f"- {url}")
-                st.success("URLs de imágenes procesadas.")
-            else:
-                df['image_url_processed'] = "" # Add empty column if 'Image' not present
+            df[publication_number_col] = df[publication_number_col].fillna('') # Ensure publication number is filled
+
+            st.write("Cargando y procesando URLs de imágenes desde GitHub...")
+            # Construct image URLs using Publication Number
+            df['image_url_processed'] = df[publication_number_col].apply(
+                lambda x: f"{github_image_base_url}{x}.png" if x else ""
+            )
+            st.success("URLs de imágenes procesadas.")
+            st.info("Asegúrate de que el repositorio de GitHub y la carpeta 'images' sean públicos y que las imágenes existan con el nombre 'NUMERO_DE_PUBLICACION.png'.")
 
             # Combines the original title and summary to create a complete patent description
             df['Descripción Completa'] = df[original_title_col] + ". " + df[original_abstract_col]
@@ -255,7 +239,7 @@ with st.spinner(f"Inicializando base de datos de patentes..."):
 if df_patents is None or patent_embeddings is None:
     st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
              "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
-             "y que contenga las columnas 'Title (Original language)' y 'Abstract (Original language)'. "
+             "y que contenga las columnas 'Title (Original language)', 'Abstract (Original language)' y 'Publication Number'. "
              "Se ignora mayúsculas/minúsculas y espacios extra en los nombres de las columnas.")
     st.stop() # Stop the app if data can't be loaded
 
@@ -307,20 +291,16 @@ with st.form(key='search_form', clear_on_submit=False):
                             patent_summary = df_patents.iloc[idx]['abstract (original language)']
                             patent_image_url = df_patents.iloc[idx]['image_url_processed'] # Get processed image URL
                             
-                            patent_number_found = 'N/A'
-                            if 'numero de patente' in df_patents.columns:
-                                patent_number_found = df_patents.iloc[idx]['numero de patente']
-                            elif 'publication number' in df_patents.columns: 
-                                patent_number_found = df_patents.iloc[idx]['publication number']
-                            elif 'patent number' in df_patents.columns: 
-                                patent_number_found = df_patents.iloc[idx]['patent number']
+                            # Use the processed publication number directly for consistency
+                            patent_number_found = df_patents.iloc[idx]['publication number']
                             
                             # Escape HTML-breaking characters in the content
                             escaped_patent_title = html.escape(patent_title)
                             escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
                             
                             # Default image for onerror, if needed
-                            default_image_url = "https://placehold.co/120x120/E0F2F7/20C997?text=No+Image"
+                            # Simpler placeholder for local GitHub hosting context
+                            default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image" 
                             
                             card_html = f"""
 <div class="google-patent-card">
@@ -343,3 +323,4 @@ with st.form(key='search_form', clear_on_submit=False):
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
 
 # No custom JavaScript for syncing is needed now.
+
