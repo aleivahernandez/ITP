@@ -219,6 +219,13 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Magnifying glass SVG (used in search button and patent cards)
+MAGNIFYING_GLASS_SVG = """
+<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
+</svg>
+"""
+
 # --- Functions for loading and processing data/models ---
 
 @st.cache_resource
@@ -232,8 +239,6 @@ def load_embedding_model():
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
         st.success("Modelo de embeddings cargado correctamente.")
     return model
-
-# No get_drive_direct_link function. Image URLs are assumed to be direct.
 
 @st.cache_data
 def process_patent_data(file_path):
@@ -288,12 +293,10 @@ def process_patent_data(file_path):
             df[publication_country_col] = df[publication_country_col].fillna('')
 
             # --- Configure GitHub Image Base URL ---
-            # Using the URL provided by the user
             github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP/main/images/" 
             # --- End GitHub Image Base URL Configuration ---
 
             # Construct image URLs using Publication Number
-            # This column is always generated, assuming the image exists in GitHub
             df['image_url_processed'] = df[publication_number_col].apply(
                 lambda x: f"{github_image_base_url}{x}.png" if x else ""
             )
