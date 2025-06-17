@@ -226,12 +226,14 @@ MAGNIFYING_GLASS_SVG = """
 </svg>
 """
 
-# Inject JavaScript function once
-st.markdown("""
+# Inject JavaScript function for card click listener
+# Note: Using triple quotes to define a multi-line string. No f-string formatting here.
+JS_CARD_CLICK_LISTENER = """
 <script>
     // Function to set up click listener for patent cards
     function setupCardClickListener(cardDivId, hiddenButtonKey) {
         const cardDiv = document.getElementById(cardDivId);
+        // Ensure to select the button that is inside the form with the specific key
         const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
 
         if (cardDiv && hiddenButton) {
@@ -249,7 +251,8 @@ st.markdown("""
         }
     }
 </script>
-""", unsafe_allow_html=True)
+"""
+st.markdown(JS_CARD_CLICK_LISTENER, unsafe_allow_html=True)
 
 
 # --- Functions for loading and processing data/models ---
@@ -523,7 +526,7 @@ else:
                                         st.rerun()
 
                                 # Call JavaScript to set up click listener for this specific card
-                                # Escaped curly braces in the JavaScript string
+                                # The arguments are string literals, so no f-string interpolation issues here.
                                 st.markdown(f"<script>setupCardClickListener('patent_card_div_{idx}', 'hidden_card_button_{idx}');</script>", unsafe_allow_html=True)
                                 
                 except Exception as e: # End of the try block, start of the except block
