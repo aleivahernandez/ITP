@@ -226,6 +226,50 @@ MAGNIFYING_GLASS_SVG = """
 </svg>
 """
 
+# Inject JavaScript function once
+st.markdown("""
+<script>
+    // Function to set up click listener for patent cards
+    function setupCardClickListener(cardFormKey, hiddenButtonKey) {
+        // Find the form associated with the card
+        const form = document.querySelector(`div[data-testid="stForm"] > div > form[data-testid="stForm"][key="${cardFormKey}"]`);
+        if (!form) {
+            console.warn(`Form with key ${cardFormKey} not found.`);
+            return;
+        }
+
+        // Find the Google Patent Card div inside this form
+        const cardDiv = form.querySelector('.google-patent-card');
+        if (!cardDiv) {
+            console.warn(`Card div not found inside form ${cardFormKey}.`);
+            return;
+        }
+
+        // Find the hidden Streamlit submit button inside this form
+        const hiddenButton = form.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
+        if (!hiddenButton) {
+            console.warn(`Hidden button with key ${hiddenButtonKey} not found.`);
+            return;
+        }
+
+        // Assign the click event to the Google Patent Card div
+        // Use a flag to prevent multiple assignments
+        if (!cardDiv._hasClickListener) {
+            cardDiv.onclick = (event) => {
+                // Prevent default behavior (e.g., text selection)
+                event.preventDefault();
+                // Stop event propagation to prevent it from affecting other Streamlit elements
+                event.stopPropagation();
+                // Programmatically click the hidden Streamlit submit button
+                hiddenButton.click();
+            };
+            cardDiv._hasClickListener = true; // Mark as having listener
+        }
+    }
+</script>
+""", unsafe_allow_html=True)
+
+
 # --- Functions for loading and processing data/models ---
 
 @st.cache_resource
@@ -469,7 +513,7 @@ else:
                                 # Wrap each card in a form for clickability
                                 with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
                                     card_html = f"""
-    <div class="google-patent-card">
+    <div class="google-patent-card" id="patent_card_div_{idx}">
         <div class="similarity-score">Similitud: {score:.2%}</div>
         <div class="patent-image-container">
             <img src="{patent_image_url if patent_image_url else default_image_url}" 
@@ -496,18 +540,8 @@ else:
                                         st.session_state.selected_patent_idx = idx
                                         st.rerun()
 
-                                # Inject JavaScript to make the div clickable
-                                st.markdown(f"""
-    <script>
-        const cardDiv_{idx} = document.querySelector('div[data-testid="stForm"] > div > div > div.google-patent-card');
-        const hiddenButton_{idx} = document.querySelector('button[data-testid="stFormSubmitButton"][key="hidden_card_button_{idx}"]');
-        if (cardDiv_{idx} && hiddenButton_{idx}) {{
-            cardDiv_{idx}.onclick = () => {{
-                hiddenButton_{idx}.click();
-            }};
-        }}
-    </script>
-    """, unsafe_allow_html=True)
+                                # Call JavaScript to set up click listener for this specific card
+                                st.markdown(f"<script>setupCardClickListener('patent_card_div_{idx}', 'hidden_card_button_{idx}');</script>", unsafe_allow_html=True)
                                 
                 except Exception as e: # End of the try block, start of the except block
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
