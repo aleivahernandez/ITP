@@ -8,143 +8,11 @@ import html
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
 
-# Custom CSS for a better visual match to the provided image
-# Using Tailwind CSS classes for styling
-st.markdown(
-    """
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #e0f2f7; /* Light blue background for the page */
-        }
-        .stApp {
-            max-width: 800px; /* Constrain the app width */
-            margin: 2rem auto; /* Center the app on the page */
-            background-color: #ffffff; /* White background for the app container */
-            border-radius: 1.5rem; /* Rounded Corners */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Soft shadow */
-            padding: 2.5rem; /* Padding inside the app container */
-        }
-        .search-input-container {
-            display: flex;
-            align-items: center;
-            border: 2px solid #20c997; /* Teal border */
-            border-radius: 9999px; /* Fully rounded */
-            padding: 0.5rem 1rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        .search-input-container input {
-            flex-grow: 1;
-            border: none;
-            outline: none;
-            font-size: 1.125rem; /* text-lg */
-            padding: 0.5rem 0.75rem;
-            background: transparent;
-        }
-        .search-button {
-            background-color: #20c997; /* Teal background */
-            color: white;
-            border-radius: 9999px; /* Fully rounded */
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            border: none;
-            transition: background-color 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex; /* Make it flex to center content */
-            justify-content: center;
-            align-items: center;
-        }
-        .search-button:hover {
-            background-color: #1aae89; /* Darker teal on hover */
-        }
-        .search-button-icon-placeholder { /* Styling for the div that holds the SVG */
-            width: 24px; /* Adjust as needed for SVG size */
-            height: 24px; /* Adjust as needed for SVG size */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .patent-card {
-            display: flex;
-            align-items: flex-start;
-            background-color: #f0fdf4; /* Light green background */
-            border-left: 5px solid #20c997; /* Teal left border */
-            border-radius: 0.75rem; /* Rounded corners */
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            position: relative; /* Needed for absolute positioning of similarity score */
-        }
-        .patent-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-        .patent-icon {
-            flex-shrink: 0;
-            width: 48px; /* w-12 */
-            height: 48px; /* h-12 */
-            margin-right: 1.5rem; /* mr-6 */
-            color: #20c997; /* Teal color */
-        }
-        .patent-details {
-            flex-grow: 1;
-        }
-        .patent-title {
-            font-size: 1.25rem; /* text-xl */
-            font-weight: 600; /* font-semibold */
-            color: #1f2937; /* Gray-900 */
-            margin-bottom: 0.5rem;
-        }
-        .patent-summary {
-            font-size: 0.95rem; /* text-base */
-            color: #4b5563; /* Gray-700 */
-        }
-        .similarity-score {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background-color: #e0f2f7; /* Light blue background to contrast */
-            color: #20c997; /* Teal color */
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.5rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            z-index: 10; /* Ensure it's on top */
-        }
-        .stSpinner > div {
-            border-top-color: #20c997 !important;
-        }
-        /* --- CSS para ocultar completamente el contenedor de widgets funcionales --- */
-        #streamlit_functional_widgets_wrapper {
-            display: none !important;
-            height: 0 !important;
-            width: 0 !important;
-            overflow: hidden !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
-        }
+# No custom CSS for styling in this version
+# Removed: st.markdown("""...style...""", unsafe_allow_html=True)
 
-        /* Ajustes de estilos para los elementos de texto estándar de Streamlit, si aparecen */
-        .st-emotion-cache-16idsys p, /* Adjust default paragraph font size for st.markdown */
-        .st-emotion-cache-1s2a8v p { /* Adjust `p` tag font size for `st.markdown` for older versions */
-            font-size: 1rem;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# Magnifying glass SVG (used in search button and patent cards)
-MAGNIFYING_GLASS_SVG = """
-<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
-</svg>
-"""
+# Removed: Magnifying glass SVG as it was part of custom HTML/CSS
+# MAGNIFYING_GLASS_SVG = """..."""
 
 # --- Functions for loading and processing data/models ---
 
@@ -248,41 +116,22 @@ MAX_RESULTS = 3
 
 # Use a form to capture the text input and button press together for better UX
 with st.form(key='search_form', clear_on_submit=False):
-    # Initial value for the custom input.
-    initial_search_value = "Necesito soluciones para la gestión eficiente de la producción de miel."
-
-    # This creates the visual search bar with an HTML input and a custom SVG-based clickable button
-    st.markdown(f"""
-        <div class="search-input-container">
-            <input type="text" id="problem_description_input" name="problem_description"
-                   value="{initial_search_value}" placeholder="Escribe aquí tu necesidad apícola...">
-            <button type="submit" class="search-button">
-                <div id="magnifying_glass_icon_container" class="search-button-icon-placeholder"></div>
-            </button>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # These Streamlit widgets are present only for functionality.
-    # They are completely hidden by CSS rules.
-    st.markdown('<div id="streamlit_functional_widgets_wrapper">', unsafe_allow_html=True) # Wrapper div to hide all Streamlit widgets
-
-    problem_description_from_form = st.text_area(
-        "Hidden input for problem description", # Label, though hidden
-        value=initial_search_value, # Initial value
+    # This is the Streamlit text_area, now visible and primary for input
+    problem_description = st.text_area(
+        "Describe tu problema técnico o necesidad funcional:",
+        value="Necesito soluciones para la gestión eficiente de la producción de miel.",
         height=68, # Required minimum height
-        label_visibility="hidden", # Hide the label
-        key="form_problem_description", # Key for internal Streamlit tracking
-        placeholder="Este campo está oculto.", # Placeholder, won't be seen
-        help="Este campo es solo para la lógica interna y está oculto visualmente." # Help text, also hidden
+        label_visibility="visible", # Keep label visible
+        key="problem_description_input_area",
+        placeholder="Escribe aquí tu necesidad apícola..."
     )
     
+    # This is the Streamlit form submit button.
     submitted = st.form_submit_button("Buscar Soluciones", type="primary")
 
-    st.markdown('</div>', unsafe_allow_html=True) # Close the hidden widgets wrapper
-
-    # If the form is submitted via the custom HTML button (which triggers st.form_submit_button)
+    # If the form is submitted
     if submitted:
-        current_problem_description = problem_description_from_form.strip() # Get value from hidden text_area
+        current_problem_description = problem_description.strip() # Direct access to text_area value
 
         if not current_problem_description:
             st.warning("Por favor, ingresa una descripción del problema.")
@@ -306,7 +155,7 @@ with st.form(key='search_form', clear_on_submit=False):
                             patent_summary = df_patents.iloc[idx]['abstract (original language)']
                             
                             # It's possible 'numero de patente' might not exist in the new dataset.
-                            # We can also check if a column like 'Publication Number' or 'Patent Number' exists and use that.
+                            # We can also check if a column like 'Publication Number' or 'Patent Number' exists and and use that.
                             # Access columns using their normalized names
                             patent_number_found = 'N/A'
                             if 'numero de patente' in df_patents.columns:
@@ -320,60 +169,11 @@ with st.form(key='search_form', clear_on_submit=False):
                             escaped_patent_title = html.escape(patent_title)
                             escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
 
-                            card_html = f"""
-<div class="patent-card">
-    <div class="similarity-score">Similitud: {score:.2%}</div>
-    <div class="patent-icon">{MAGNIFYING_GLASS_SVG}</div>
-    <div class="patent-details">
-        <p class="patent-title">{escaped_patent_title}</p>
-        <p class="patent-summary text-sm">{escaped_patent_summary_short}</p>
-        <p class="text-xs text-gray-500 mt-2">Patente: {patent_number_found}</p>
-    </div>
-</div>
-"""
-                            st.markdown(card_html, unsafe_allow_html=True)
-                            
-                except Exception as e:
-                    st.error(f"Ocurrió un error durante la búsqueda: {e}")
+                            # Display using standard Streamlit components
+                            st.subheader(f"**{i+1}. {escaped_patent_title}**")
+                            st.write(f"Similitud: {score:.2%}")
+                            st.write(f"Resumen: {escaped_patent_summary_short}")
+                            st.write(f"Patente: {patent_number_found}")
+                            st.markdown("---") # Separator between patents
 
-# This JavaScript ensures that when the custom HTML input changes, the Streamlit text_area also updates.
-# It also injects the SVG into the custom button placeholder.
-st.markdown(f"""
-<script>
-    const customInput = document.getElementById('problem_description_input');
-    const streamlitTextArea = document.querySelector('textarea[aria-label="Hidden input for problem description"]');
-    const submitButton = document.querySelector('button[data-testid="stFormSubmitButton"]'); // Native submit button
-    const customSearchButton = document.querySelector('.search-button'); // The custom HTML button
-    const magnifyingGlassIconContainer = document.getElementById('magnifying_glass_icon_container');
-
-    // Inject SVG into the placeholder div
-    if (magnifyingGlassIconContainer) {{
-        magnifyingGlassIconContainer.innerHTML = `{MAGNIFYING_GLASS_SVG}`;
-    }}
-
-    if (customInput && streamlitTextArea && submitButton && customSearchButton) {{
-        // Set initial value for Streamlit text_area from custom input
-        streamlitTextArea.value = customInput.value;
-        streamlitTextArea.dispatchEvent(new Event('input', {{ bubbles: true }}));
-
-        customInput.addEventListener('input', (event) => {{
-            streamlitTextArea.value = event.target.value;
-            streamlitTextArea.dispatchEvent(new Event('input', {{ bubbles: true }}));
-        }});
-
-        // Trigger form submission if Enter key is pressed in the custom input
-        customInput.addEventListener('keydown', (event) => {{
-            if (event.key === 'Enter') {{
-                event.preventDefault(); // Prevent default form submission
-                submitButton.click(); // Programmatically click the hidden Streamlit submit button
-            }}
-        }});
-
-        // Ensure the custom HTML button also triggers the hidden Streamlit submit button
-        customSearchButton.addEventListener('click', (event) => {{
-            event.preventDefault(); // Prevent default behavior of custom button
-            submitButton.click(); // Programmatically click the hidden Streamlit submit button
-        }});
-    }}
-</script>
-""", unsafe_allow_html=True)
+# No custom JavaScript for syncing is needed now.
