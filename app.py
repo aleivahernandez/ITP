@@ -215,10 +215,9 @@ def process_patent_data(file_path):
                 df[image_col] = df[image_col].fillna('')
                 st.write("Procesando URLs de imágenes (Google Drive si aplica)... **Asegúrate de que los enlaces sean públicos y con acceso de lector.**")
                 df['image_url_processed'] = df[image_col].apply(get_drive_direct_link)
-                # Display first 5 processed image URLs for debugging
-                st.info("Primeras 5 URLs de imágenes procesadas (para depuración - copia y pega en una ventana de incógnito para probar):")
-                for i, url in enumerate(df['image_url_processed'].head(5)):
-                    st.write(f"- {url}")
+                # Removed: st.info("Primeras 5 URLs de imágenes procesadas (para depuración - copia y pega en una ventana de incógnito para probar):")
+                # Removed: for i, url in enumerate(df['image_url_processed'].head(5)):
+                # Removed: st.write(f"- {url}")
                 st.success("URLs de imágenes procesadas.")
             else:
                 df['image_url_processed'] = "" # Add empty column if 'Image' not present
