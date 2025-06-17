@@ -511,4 +511,3 @@ else:
                                 
                 except Exception as e: # End of the try block, start of the except block
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
-
