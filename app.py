@@ -137,7 +137,7 @@ with st.form(key='search_form', clear_on_submit=False):
             st.warning("Por favor, ingresa una descripción del problema.")
         else:
             with st.spinner("Buscando patentes relevantes..."):
-                try:
+                try: # Start of the try block
                     current_model = load_embedding_model()
                     query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
 
@@ -176,4 +176,8 @@ with st.form(key='search_form', clear_on_submit=False):
                             st.write(f"Patente: {patent_number_found}")
                             st.markdown("---") # Separator between patents
 
+                except Exception as e: # End of the try block, start of the except block
+                    st.error(f"Ocurrió un error durante la búsqueda: {e}")
+
 # No custom JavaScript for syncing is needed now.
+
