@@ -401,15 +401,15 @@ if st.session_state.selected_patent_idx is not None:
     <table class="detail-meta-table">
         <tr>
             <td>Número:</td>
-            <td>{0}</td>
+            <td>{}</td>
         </tr>
         <tr>
             <td>Solicitante:</td>
-            <td>{1}</td>
+            <td>{}</td>
         </tr>
         <tr>
             <td>País:</td>
-            <td>{2}</td>
+            <td>{}</td>
         </tr>
     </table>
     """.format(html.escape(publication_number), html.escape(assignee), html.escape(publication_country)), unsafe_allow_html=True)
@@ -523,7 +523,7 @@ else:
                                         st.rerun()
 
                                 # Call JavaScript to set up click listener for this specific card
-                                # This is the line where the SyntaxError was likely occurring due to unescaped {} in the JS f-string
+                                # Escaped curly braces in the JavaScript string
                                 st.markdown(f"<script>setupCardClickListener('patent_card_div_{idx}', 'hidden_card_button_{idx}');</script>", unsafe_allow_html=True)
                                 
                 except Exception as e: # End of the try block, start of the except block
