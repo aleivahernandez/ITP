@@ -412,7 +412,7 @@ else:
                                 # Wrap each card in a form for clickability
                                 # The hidden submit button will now cover the card visually for click detection
                                 with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
-                                    # Define the HTML string separately and then format it.
+                                    # Define the HTML string as a normal string and use .format()
                                     # This avoids f-string parsing issues with nested braces in JS/CSS-like syntax.
                                     card_html_template = """
     <div class="google-patent-card">
@@ -433,7 +433,7 @@ else:
                                     card_html = card_html_template.format(
                                         score,
                                         patent_image_url if patent_image_url else default_image_url,
-                                        default_image_url,
+                                        default_image_url, # This is the third arg for {2}
                                         escaped_patent_title,
                                         escaped_patent_summary_short,
                                         patent_number_found
