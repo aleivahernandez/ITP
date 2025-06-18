@@ -225,33 +225,37 @@ st.markdown(
 # Magnifying glass SVG (used in search button and patent cards)
 MAGNIFYING_GLASS_SVG = """
 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
+    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 # 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
 </svg>
 """
 
-# Inject JavaScript function for card click listener (Removed as detail view is out)
-# JS_CARD_CLICK_LISTENER_SCRIPT = """
-# <script>
-#     // Function to set up click listener for patent cards
-#     function setupCardClickListener(cardDivId, hiddenButtonKey) {
-#         const cardDiv = document.getElementById(cardDivId);
-#         const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
-#         if (cardDiv && hiddenButton) {
-#             if (!cardDiv._hasClickListener) {
-#                 cardDiv.onclick = (event) => {
-#                     event.preventDefault();
-#                     event.stopPropagation();
-#                     hiddenButton.click();
-#                 };
-#                 cardDiv._hasClickListener = true;
-#             }
-#         } else {
-#             console.warn(`Elements not found for setupCardClickListener: cardDivId=${cardDivId}, hiddenButtonKey=${hiddenButtonKey}`);
-#         }
-#     }
-# </script>
-# """
-# st.markdown(JS_CARD_CLICK_LISTENER_SCRIPT, unsafe_allow_html=True)
+# Inject JavaScript function for card click listener
+# Using .format() for the entire script string to avoid f-string parsing issues with JS braces.
+JS_CARD_CLICK_LISTENER_SCRIPT = """
+<script>
+    // Function to set up click listener for patent cards
+    function setupCardClickListener(cardDivId, hiddenButtonKey) {{
+        const cardDiv = document.getElementById(cardDivId);
+        // Ensure to select the button that is inside the form with the specific key
+        const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${{hiddenButtonKey}}"]`);
+
+        if (cardDiv && hiddenButton) {{
+            // Use a flag to prevent multiple assignments
+            if (!cardDiv._hasClickListener) {{
+                cardDiv.onclick = (event) => {{
+                    event.preventDefault(); // Prevent default behavior (e.g., text selection)
+                    event.stopPropagation(); // Stop event propagation
+                    hiddenButton.click(); // Programmatically click the hidden Streamlit submit button
+                }};
+                cardDiv._hasClickListener = true; // Mark as having listener
+            }}
+        }} else {{
+            console.warn(`Elements not found for setupCardClickListener: cardDivId=${{cardDivId}}, hiddenButtonKey=${{hiddenButtonKey}}`);
+        }}
+    }}
+</script>
+"""
+st.markdown(JS_CARD_CLICK_LISTENER_SCRIPT, unsafe_allow_html=True)
 
 
 # --- Functions for loading and processing data/models ---
@@ -295,8 +299,8 @@ def process_patent_data(file_path):
                 'title (original language)',
                 'abstract (original language)',
                 'publication number',
-                # Removed 'assignee - dwpi', # Not needed in this view
-                # Removed 'publication country', # Not needed in this view
+                'assignee - dwpi',        # New required column
+                'publication country',    # New required column
             ]
             
             # Check if all required columns exist after normalization
@@ -310,11 +314,15 @@ def process_patent_data(file_path):
             original_title_col = 'title (original language)'
             original_abstract_col = 'abstract (original language)'
             publication_number_col = 'publication number'
+            assignee_dwpi_col = 'assignee - dwpi'
+            publication_country_col = 'publication country'
 
             # Fill null values with empty strings
             df[original_title_col] = df[original_title_col].fillna('')
             df[original_abstract_col] = df[original_abstract_col].fillna('')
             df[publication_number_col] = df[publication_number_col].fillna('')
+            df[assignee_dwpi_col] = df[assignee_dwpi_col].fillna('')
+            df[publication_country_col] = df[publication_country_col].fillna('')
 
             # --- Configure GitHub Image Base URL ---
             github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP/main/images/" 
@@ -361,82 +369,170 @@ if df_patents is None or patent_embeddings is None:
              "y que contenga las columnas requeridas (ver mensaje de error anterior).")
     st.stop() # Stop the app if data can't be loaded
 
-# --- Main Search View Logic ---
-st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
-st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
+# --- Detail View Logic ---
+if st.session_state.selected_patent_idx is not None:
+    selected_idx = st.session_state.selected_patent_idx
+    patent = df_patents.iloc[selected_idx]
 
-
-# Fixed number of results, no slider
-MAX_RESULTS = 3
-
-# Use a form to capture the text input and button press together for better UX
-with st.form(key='search_form', clear_on_submit=False):
-    # This is the Streamlit text_area, now visible and primary for input
-    problem_description = st.text_area(
-        "Describe tu problema técnico o necesidad funcional:",
-        value="Necesito soluciones para la gestión eficiente de la producción de miel.",
-        height=68, # Required minimum height
-        label_visibility="visible", # Keep label visible
-        key="problem_description_input_area",
-        placeholder="Escribe aquí tu necesidad apícola..."
-    )
+    # Extract patent details for display
+    title = patent['title (original language)']
+    abstract = patent['abstract (original language)']
+    publication_number = patent['publication number']
+    assignee = patent['assignee - dwpi']
+    publication_country = patent['publication country']
+    image_url = patent['image_url_processed'] # Get processed image URL
     
-    # This is the Streamlit form submit button.
-    submitted = st.form_submit_button("Buscar Soluciones", type="primary")
+    # Default image for onerror, if needed
+    default_image_url = "https://placehold.co/250x250/cccccc/000000?text=No+Image"
 
-    # If the form is submitted
-    if submitted:
-        current_problem_description = problem_description.strip() # Direct access to text_area value
-
-        if not current_problem_description:
-            st.warning("Por favor, ingresa una descripción del problema.")
-        else:
-            with st.spinner("Buscando patentes relevantes..."):
-                try: # Start of the try block
-                    current_model = load_embedding_model()
-                    query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
-
-                    cosine_scores = util.cos_sim(query_embedding, patent_embeddings)[0]
-                    top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:MAX_RESULTS]
-
-                    if len(top_results_indices) == 0:
-                        st.info("No se encontraron patentes relevantes con la descripción proporcionada.")
-                    else:
-                        st.subheader("Resultados de la búsqueda:") # Added a subheader for clarity
-                        for i, idx in enumerate(top_results_indices):
-                            score = cosine_scores[idx].item()
-                            # Use the original (untranslated) title and abstract for display
-                            patent_title = df_patents.iloc[idx]['title (original language)']
-                            patent_summary = df_patents.iloc[idx]['abstract (original language)']
-                            patent_image_url = df_patents.iloc[idx]['image_url_processed'] # Get processed image URL
-                            
-                            # Use the processed publication number directly for consistency
-                            patent_number_found = df_patents.iloc[idx]['publication number']
-                            
-                            # Escape HTML-breaking characters in the content
-                            escaped_patent_title = html.escape(patent_title)
-                            escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
-                            
-                            # Default image for onerror, if needed
-                            default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image" 
-                            
-                            # Display each patent result in a simplified Google Patents-like block
-                            st.markdown(f"""
-<div class="google-patent-result-container">
-    <div class="flex items-start">
-        <img src="{patent_image_url if patent_image_url else default_image_url}" 
-             alt="" class="result-image" 
+    st.markdown("<div class='detail-view-container'>", unsafe_allow_html=True)
+    st.markdown(f"<h1 class='detail-header'>{html.escape(title)}</h1>", unsafe_allow_html=True)
+    
+    st.markdown("<div class='detail-content-wrapper'>", unsafe_allow_html=True)
+    
+    # Image Box
+    st.markdown(f"""
+    <div class="detail-image-box">
+        <img src="{image_url if image_url else default_image_url}" 
+             alt="[Image of {html.escape(title)}]" class="detail-image" 
              onerror="this.onerror=null;this.src='{default_image_url}';">
-        <div class="flex-1">
-            <h3 class="result-title">{escaped_patent_title}</h3>
-            <p class="result-summary">{escaped_patent_summary_short}</p>
-            <p class="result-meta">Patente: {patent_number_found} &nbsp;&nbsp; Similitud: {score:.2%}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Metadata and Summary Wrapper
+    st.markdown("<div class='detail-meta-summary-wrapper'>", unsafe_allow_html=True)
+    
+    # Metadata Table
+    st.markdown("""
+    <table class="detail-meta-table">
+        <tr>
+            <td>Número:</td>
+            <td>{}</td>
+        </tr>
+        <tr>
+            <td>Solicitante:</td>
+            <td>{}</td>
+        </tr>
+        <tr>
+            <td>País:</td>
+            <td>{}</td>
+        </tr>
+    </table>
+    """.format(html.escape(publication_number), html.escape(assignee), html.escape(publication_country)), unsafe_allow_html=True)
+
+    # Summary Box
+    st.markdown(f"""
+    <div class="detail-summary-box">
+        <h4>Resumen:</h4>
+        <p>{html.escape(abstract)}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True) # Close detail-meta-summary-wrapper
+    st.markdown("</div>", unsafe_allow_html=True) # Close detail-content-wrapper
+
+    # Back Button
+    if st.button("Volver a la búsqueda", key="back_to_search", help="Regresar a la lista de resultados"):
+        st.session_state.selected_patent_idx = None
+        st.rerun() # Rerun to refresh the view
+        
+    st.markdown("</div>", unsafe_allow_html=True) # Close detail-view-container
+
+# --- Main Search View Logic ---
+else:
+    st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
+    st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
+
+
+    # Fixed number of results, no slider
+    MAX_RESULTS = 3
+
+    # Use a form to capture the text input and button press together for better UX
+    with st.form(key='search_form', clear_on_submit=False):
+        # This is the Streamlit text_area, now visible and primary for input
+        problem_description = st.text_area(
+            "Describe tu problema técnico o necesidad funcional:",
+            value="Necesito soluciones para la gestión eficiente de la producción de miel.",
+            height=68, # Required minimum height
+            label_visibility="visible", # Keep label visible
+            key="problem_description_input_area",
+            placeholder="Escribe aquí tu necesidad apícola..."
+        )
+        
+        # This is the Streamlit form submit button.
+        submitted = st.form_submit_button("Buscar Soluciones", type="primary")
+
+        # If the form is submitted
+        if submitted:
+            current_problem_description = problem_description.strip() # Direct access to text_area value
+
+            if not current_problem_description:
+                st.warning("Por favor, ingresa una descripción del problema.")
+            else:
+                with st.spinner("Buscando patentes relevantes..."):
+                    try: # Start of the try block
+                        current_model = load_embedding_model()
+                        query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
+
+                        cosine_scores = util.cos_sim(query_embedding, patent_embeddings)[0]
+                        top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:MAX_RESULTS]
+
+                        if len(top_results_indices) == 0:
+                            st.info("No se encontraron patentes relevantes con la descripción proporcionada.")
+                        else:
+                            st.subheader("Resultados de la búsqueda:") # Added a subheader for clarity
+                            for i, idx in enumerate(top_results_indices):
+                                score = cosine_scores[idx].item()
+                                # Use the original (untranslated) title and abstract for display
+                                patent_title = df_patents.iloc[idx]['title (original language)']
+                                patent_summary = df_patents.iloc[idx]['abstract (original language)']
+                                patent_image_url = df_patents.iloc[idx]['image_url_processed'] # Get processed image URL
+                                
+                                # Use the processed publication number directly for consistency
+                                patent_number_found = df_patents.iloc[idx]['publication number']
+                                
+                                # Escape HTML-breaking characters in the content
+                                escaped_patent_title = html.escape(patent_title)
+                                escaped_patent_summary_short = html.escape(patent_summary[:100]) + "..."
+                                
+                                # Default image for onerror, if needed
+                                default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image" 
+                                
+                                # Wrap each card in a form for clickability
+                                with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
+                                    card_html = f"""
+    <div class="google-patent-card" id="patent_card_div_{idx}">
+        <div class="similarity-score">Similitud: {score:.2%}</div>
+        <div class="patent-image-container">
+            <img src="{patent_image_url if patent_image_url else default_image_url}" 
+                 alt="[Image of {escaped_patent_title}]" class="patent-thumbnail" 
+                 onerror="this.onerror=null;this.src='{default_image_url}';">
+        </div>
+        <div class="google-patent-content-details">
+            <p class="google-patent-title">{escaped_patent_title}</p>
+            <p class="google-patent-summary">{escaped_patent_summary_short}</p>
+            <p class="google-patent-meta">Patente: {patent_number_found}</p>
         </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
-                            
+    """
+                                    st.markdown(card_html, unsafe_allow_html=True)
+                                    
+                                    # Hidden button that gets clicked by JS
+                                    clicked_card = st.form_submit_button(
+                                        label="Ver Detalles",
+                                        key=f"hidden_card_button_{idx}",
+                                        help="Haz clic para ver los detalles de la patente"
+                                    )
+                                    # If the hidden button is clicked, store the index and rerun
+                                    if clicked_card:
+                                        st.session_state.selected_patent_idx = idx
+                                        st.rerun()
+
+                                # Call JavaScript to set up click listener for this specific card
+                                # This string will NOT be an f-string to avoid syntax issues.
+                                # Use .format() method for dynamic values in JavaScript string
+                                js_call_str = "<script>setupCardClickListener('{}', '{}');</script>".format(f"patent_card_div_{idx}", f"hidden_card_button_{idx}")
+                                st.markdown(js_call_str, unsafe_allow_html=True)
+                                
                 except Exception as e: # End of the try block, start of the except block
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
-
-# No custom JavaScript for syncing is needed in this version.
