@@ -63,89 +63,71 @@ st.markdown(
         }
 
         /* --- Google Patents style for patent results --- */
-        .google-patent-card {
+        .google-patent-result-container { /* New container for each result block */
             background-color: #ffffff; /* White background */
             border: 1px solid #dadce0; /* Light gray border */
             border-radius: 8px; /* Slightly rounded corners */
             padding: 1.25rem;
             margin-bottom: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            transition: box-shadow 0.2s ease;
             position: relative; /* For similarity score */
-            display: flex; /* Use flexbox for image and content layout */
-            align-items: flex-start; /* Align items to the top */
-            /* Removed cursor: pointer here, as detail view click is removed */
         }
-        .google-patent-card:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
+        .result-header {
+            display: flex;
+            align-items: flex-start; /* Align image and text to the top */
+            margin-bottom: 0.5rem;
+            gap: 1rem; /* Space between image and text */
         }
-        .patent-image-container {
-            flex-shrink: 0; /* Prevent image container from shrinking */
-            width: 120px; /* Fixed width for the image container */
-            height: 120px; /* Fixed height for the image container */
-            margin-right: 1rem; /* Space between image and text */
-            border-radius: 4px; /* Slightly rounded corners for the image box */
-            overflow: hidden; /* Hide overflowing parts of the image */
+        .result-image-wrapper { /* Wrapper for the image to control its size and flex behavior */
+            flex-shrink: 0;
+            width: 80px; /* Fixed width for the image container */
+            height: 80px; /* Fixed height for the image container */
+            border-radius: 4px;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: #f0f0f0; /* Placeholder background */
         }
-        .patent-thumbnail {
+        .result-image {
             width: 100%;
             height: 100%;
             object-fit: contain; /* Ensure image fits without cropping, maintaining aspect ratio */
             border-radius: 4px;
         }
-        .google-patent-content-details { /* New class to wrap text content */
-            flex-grow: 1; /* Allow content to take remaining space */
+        .result-text-content { /* Wrapper for title, summary, meta */
+            flex-grow: 1; /* Allows text content to take remaining space */
         }
-        .google-patent-title {
+        .result-title {
             font-size: 1.15rem;
-            font-weight: 600; /* Semi-bold */
-            color: #1a0dab; /* Google blue link color */
-            margin-bottom: 0.4rem;
+            font-weight: 600;
+            color: #1a0dab;
             line-height: 1.3;
+            margin-bottom: 0.4rem;
         }
-        .google-patent-summary {
+        .result-summary {
             font-size: 0.9rem;
-            color: #4d5156; /* Darker gray for text */
+            color: #4d5156;
             margin-bottom: 0.5rem;
             line-height: 1.5;
         }
-        .google-patent-meta {
+        .result-meta {
             font-size: 0.8rem;
-            color: #70757a; /* Lighter gray for metadata */
-            margin-top: 0.5rem;
+            color: #70757a;
         }
-        /* Adjusting similarity score position for Google Patents style */
-        .similarity-score {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            background-color: #e0f2f7; /* Light blue background to contrast */
+        .similarity-score-display { /* For displaying score without absolute positioning */
+            font-size: 0.8rem;
+            font-weight: 600;
             color: #20c997; /* Teal color */
+            margin-left: auto; /* Push to the right */
+            background-color: #e0f2f7; /* Light blue background to contrast */
             padding: 0.15rem 0.4rem;
             border-radius: 0.4rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            z-index: 10;
         }
     </style>
     """,
     unsafe_allow_html=True
 )
-
-# Magnifying glass SVG (used in patent cards)
-MAGNIFYING_GLASS_SVG = """
-<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
-</svg>
-"""
-
-# No JavaScript function for card click listener in this version
-# Removed: st.markdown(JS_CARD_CLICK_LISTENER_SCRIPT, unsafe_allow_html=True)
-
 
 # --- Functions for loading and processing data/models ---
 
@@ -316,14 +298,16 @@ with st.form(key='search_form', clear_on_submit=False):
                             # Display each patent result in a simplified Google Patents-like block
                             st.markdown(f"""
 <div class="google-patent-result-container">
-    <div class="flex items-start">
-        <img src="{patent_image_url if patent_image_url else default_image_url}" 
-             alt="[Image of {escaped_patent_title}]" class="result-image" 
-             onerror="this.onerror=null;this.src='{default_image_url}';">
-        <div class="flex-1">
+    <div class="result-header">
+        <div class="result-image-wrapper">
+            <img src="{patent_image_url if patent_image_url else default_image_url}" 
+                 alt="" class="result-image" 
+                 onerror="this.onerror=null;this.src='{default_image_url}';">
+        </div>
+        <div class="result-text-content">
             <h3 class="result-title">{escaped_patent_title}</h3>
             <p class="result-summary">{escaped_patent_summary_short}</p>
-            <p class="result-meta">Patente: {patent_number_found} &nbsp;&nbsp; Similitud: {score:.2%}</p>
+            <p class="result-meta">Patente: {patent_number_found} <span class="similarity-score-display">Similitud: {score:.2%}</span></p>
         </div>
     </div>
 </div>
