@@ -102,6 +102,7 @@ st.markdown(
         }
         .google-patent-content-details { /* New class to wrap text content */
             flex-grow: 1; /* Allow content to take remaining space */
+            padding: 1.25rem; /* Re-add padding inside the text content area */
         }
         .google-patent-title {
             font-size: 1.15rem;
