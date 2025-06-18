@@ -76,9 +76,10 @@ st.markdown(
             margin-bottom: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
             transition: box-shadow 0.2s ease;
-            position: relative; /* For similarity score and click overlay */
+            position: relative; /* For similarity score */
             display: flex; /* Use flexbox for image and content layout */
             align-items: flex-start; /* Align items to the top */
+            /* Removed cursor: pointer from here as it's handled by a separate Streamlit button now */
         }
         .google-patent-card:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
@@ -103,7 +104,6 @@ st.markdown(
         }
         .google-patent-content-details { /* New class to wrap text content */
             flex-grow: 1; /* Allow content to take remaining space */
-            padding: 1.25rem; /* Re-add padding inside the text content area */
         }
         .google-patent-title {
             font-size: 1.15rem;
@@ -173,29 +173,15 @@ st.markdown(
         .back-button:hover {
             background-color: #455a64 !important; /* Darker grey-blue on hover */
         }
-        /* Style to make the hidden st.form_submit_button cover the entire custom card */
-        /* This targets the div that Streamlit creates for the button widget */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 5; /* Ensure it's clickable above card content, but below similarity score if present */
-            background-color: transparent !important;
-            color: transparent !important;
-            border: none !important;
-            cursor: pointer !important;
+        /* IMPORTANT: This style hides the hidden "Ver Detalles" button */
+        button[data-testid^="stFormSubmitButton"][key^="hidden_card_button_"] {
+            display: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
             padding: 0 !important;
             margin: 0 !important;
-            /* Hide the text label of the button */
-            font-size: 0 !important; /* Hide text */
-            line-height: 0 !important; /* Collapse line height */
-            overflow: hidden !important; /* Hide overflow */
-        }
-        /* Ensure the actual button element inside is also hidden */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] > * {
-            display: none !important;
+            border: none !important;
         }
     </style>
     """,
@@ -382,7 +368,9 @@ else:
                 st.warning("Por favor, ingresa una descripción del problema.")
             else:
                 with st.spinner("Buscando patentes relevantes..."):
-                    try: # Start of the try block
+                    # The try-except block here is the last one in the main search logic.
+                    # It's intended to catch errors during the search and display, not related to parsing HTML.
+                    try: 
                         current_model = load_embedding_model()
                         query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
 
@@ -452,5 +440,5 @@ else:
                                         st.session_state.selected_patent_idx = idx
                                         st.rerun() # Rerun to switch to detail view
                                 
-                except Exception as e: # End of the try block, start of the except block
-                    st.error(f"Ocurrió un error durante la búsqueda: {e}")
+                    except Exception as e: # This is the "except" block
+                        st.error(f"Ocurrió un error durante la búsqueda: {e}")
