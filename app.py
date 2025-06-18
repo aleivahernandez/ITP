@@ -140,7 +140,6 @@ def load_embedding_model():
     """
     with st.spinner("Cargando el modelo de embeddings (esto puede tardar un momento)..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        st.success("Modelo de embeddings cargado correctamente.")
     return model
 
 @st.cache_data
