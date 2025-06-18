@@ -4,6 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
+from string import Template # Import the Template class
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
@@ -412,31 +413,31 @@ else:
                                 # Wrap each card in a form for clickability
                                 # The hidden submit button will now cover the card visually for click detection
                                 with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
-                                    # Define the HTML string as a normal string and use .format()
+                                    # Define the HTML string as a normal string using string.Template
                                     # This avoids f-string parsing issues with nested braces in JS/CSS-like syntax.
-                                    card_html_template = """
+                                    card_html_template = Template("""
     <div class="google-patent-card">
-        <div class="similarity-score">Similitud: {0:.2%}</div>
+        <div class="similarity-score">Similitud: ${score_percent}</div>
         <div class="patent-image-container">
-            <img src="{1}" 
+            <img src="${image_url}" 
                  alt="[Image]" class="patent-thumbnail" 
-                 onerror="this.onerror=null;this.src='{2}';">
+                 onerror="this.onerror=null;this.src='${default_img_url}';">
         </div>
         <div class="google-patent-content-details">
-            <p class="google-patent-title">{3}</p>
-            <p class="google-patent-summary">{4}</p>
-            <p class="google-patent-meta">Patente: {5}</p>
+            <p class="google-patent-title">${escaped_title}</p>
+            <p class="google-patent-summary">${escaped_summary_short}</p>
+            <p class="google-patent-meta">Patente: ${patent_num_found}</p>
         </div>
         <button type="submit" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; background: transparent;"></button>
     </div>
-    """
-                                    card_html = card_html_template.format(
-                                        score,
-                                        patent_image_url if patent_image_url else default_image_url,
-                                        default_image_url, # This is the third arg for {2}
-                                        escaped_patent_title,
-                                        escaped_patent_summary_short,
-                                        patent_number_found
+    """)
+                                    card_html = card_html_template.substitute(
+                                        score_percent="{:.2%}".format(score),
+                                        image_url=patent_image_url if patent_image_url else default_image_url,
+                                        default_img_url=default_image_url,
+                                        escaped_title=escaped_patent_title,
+                                        escaped_summary_short=escaped_patent_summary_short,
+                                        patent_num_found=patent_number_found
                                     )
                                     st.markdown(card_html, unsafe_allow_html=True)
                                     
