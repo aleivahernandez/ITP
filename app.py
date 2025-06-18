@@ -412,7 +412,9 @@ else:
                                 # Wrap each card in a form for clickability
                                 # The hidden submit button will now cover the card visually for click detection
                                 with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
-                                    card_html = """
+                                    # Define the HTML string separately and then format it.
+                                    # This avoids f-string parsing issues with nested braces in JS/CSS-like syntax.
+                                    card_html_template = """
     <div class="google-patent-card">
         <div class="similarity-score">Similitud: {0:.2%}</div>
         <div class="patent-image-container">
@@ -427,7 +429,15 @@ else:
         </div>
         <button type="submit" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; background: transparent;"></button>
     </div>
-    """.format(score, patent_image_url if patent_image_url else default_image_url, default_image_url, escaped_patent_title, escaped_patent_summary_short, patent_number_found)
+    """
+                                    card_html = card_html_template.format(
+                                        score,
+                                        patent_image_url if patent_image_url else default_image_url,
+                                        default_image_url,
+                                        escaped_patent_title,
+                                        escaped_patent_summary_short,
+                                        patent_number_found
+                                    )
                                     st.markdown(card_html, unsafe_allow_html=True)
                                     
                                     # Hidden button that gets clicked by the overlaying transparent button
