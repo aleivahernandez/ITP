@@ -237,7 +237,6 @@ if df_patents is None or patent_embeddings is None:
 
 # --- Main Search View Logic ---
 st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
-st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o necesidad funcional</p>", unsafe_allow_html=True)
 
 
 # Fixed number of results, no slider
