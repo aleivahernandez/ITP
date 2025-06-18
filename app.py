@@ -140,6 +140,7 @@ def load_embedding_model():
     """
     with st.spinner("Cargando el modelo de embeddings (esto puede tardar un momento)..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        st.success("Modelo de embeddings cargado correctamente.")
     return model
 
 @st.cache_data
@@ -152,7 +153,14 @@ def process_patent_data(file_path):
     """
     if file_path:
         try:
-            df = pd.read_excel(file_path)
+            # Determine file type and read accordingly
+            if file_path.endswith('.csv'):
+                df = pd.read_csv(file_path)
+            elif file_path.endswith('.xlsx'):
+                df = pd.read_excel(file_path)
+            else:
+                st.error("Formato de archivo no soportado. Por favor, sube un archivo .csv o .xlsx.")
+                return None, None
 
             # Normalize column names: strip spaces and convert to lowercase
             df.columns = df.columns.str.strip().str.lower()
@@ -161,7 +169,9 @@ def process_patent_data(file_path):
             required_columns_normalized = [
                 'title (original language)',
                 'abstract (original language)',
-                'publication number', # Required for image URL construction
+                'publication number',
+                # Removed 'assignee - dwpi', # Not needed in this view
+                # Removed 'publication country', # Not needed in this view
             ]
             
             # Check if all required columns exist after normalization
@@ -288,11 +298,13 @@ with st.form(key='search_form', clear_on_submit=False):
                             # Display each patent result in a simplified Google Patents-like block
                             st.markdown(f"""
 <div class="google-patent-result-container">
-    <div class="flex items-start">
-        <img src="{patent_image_url if patent_image_url else default_image_url}" 
-             alt="[Image of {escaped_patent_title}]" class="result-image" 
-             onerror="this.onerror=null;this.src='{default_image_url}';">
-        <div class="flex-1">
+    <div class="result-header">
+        <div class="result-image-wrapper">
+            <img src="{patent_image_url if patent_image_url else default_image_url}" 
+                 alt="" class="result-image" 
+                 onerror="this.onerror=null;this.src='{default_image_url}';">
+        </div>
+        <div class="result-text-content">
             <h3 class="result-title">{escaped_patent_title}</h3>
             <p class="result-summary">{escaped_patent_summary_short}</p>
             <p class="result-meta">Patente: {patent_number_found} <span class="similarity-score-display">Similitud: {score:.2%}</span></p>
@@ -303,3 +315,5 @@ with st.form(key='search_form', clear_on_submit=False):
                             
                 except Exception as e: # End of the try block, start of the except block
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
+
+# No custom JavaScript for syncing is needed in this version.
