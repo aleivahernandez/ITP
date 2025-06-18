@@ -217,6 +217,30 @@ st.markdown(
         .back-button:hover {
             background-color: #455a64 !important; /* Darker grey-blue on hover */
         }
+        /* Style to make the hidden st.form_submit_button cover the entire custom card */
+        /* This div is the container that Streamlit creates for the button widget */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5; /* Ensure it's clickable above card content, but below similarity score if present */
+            background-color: transparent !important;
+            color: transparent !important;
+            border: none !important;
+            cursor: pointer !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            /* Hide the text label of the button */
+            font-size: 0 !important; /* Hide text */
+            line-height: 0 !important; /* Collapse line height */
+            overflow: hidden !important; /* Hide overflow */
+        }
+        /* Ensure the actual button element inside is also hidden */
+        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] > * {
+            display: none !important;
+        }
     </style>
     """,
     unsafe_allow_html=True
@@ -228,35 +252,6 @@ MAGNIFYING_GLASS_SVG = """
     <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
 </svg>
 """
-
-# Inject JavaScript function for card click listener
-# Using .format() for the entire script string to avoid f-string parsing issues with JS braces.
-JS_CARD_CLICK_LISTENER_SCRIPT = """
-<script>
-    // Function to set up click listener for patent cards
-    function setupCardClickListener(cardDivId, hiddenButtonKey) {
-        const cardDiv = document.getElementById(cardDivId);
-        // Ensure to select the button that is inside the form with the specific key
-        const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
-
-        if (cardDiv && hiddenButton) {
-            // Use a flag to prevent multiple assignments
-            if (!cardDiv._hasClickListener) {
-                cardDiv.onclick = (event) => {
-                    event.preventDefault(); // Prevent default behavior (e.g., text selection)
-                    event.stopPropagation(); // Stop event propagation
-                    hiddenButton.click(); // Programmatically click the hidden Streamlit submit button
-                };
-                cardDiv._hasClickListener = true; // Mark as having listener
-            }
-        } else {
-            console.warn(`Elements not found for setupCardClickListener: cardDivId=${cardDivId}, hiddenButtonKey=${hiddenButtonKey}`);
-        }
-    }
-</script>
-"""
-st.markdown(JS_CARD_CLICK_LISTENER_SCRIPT, unsafe_allow_html=True)
-
 
 # --- Functions for loading and processing data/models ---
 
@@ -499,9 +494,10 @@ else:
                                 default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image" 
                                 
                                 # Wrap each card in a form for clickability
+                                # The hidden submit button will now cover the card visually for click detection
                                 with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
                                     card_html = f"""
-    <div class="google-patent-card" id="patent_card_div_{idx}">
+    <div class="google-patent-card">
         <div class="similarity-score">Similitud: {score:.2%}</div>
         <div class="patent-image-container">
             <img src="{patent_image_url if patent_image_url else default_image_url}" 
@@ -513,26 +509,22 @@ else:
             <p class="google-patent-summary">{escaped_patent_summary_short}</p>
             <p class="google-patent-meta">Patente: {patent_number_found}</p>
         </div>
+        <button type="submit" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; background: transparent;"></button>
     </div>
     """
                                     st.markdown(card_html, unsafe_allow_html=True)
                                     
-                                    # Hidden button that gets clicked by JS
+                                    # This hidden button will now overlay the card visually and handle the click
+                                    # Its label is hidden by CSS, but it needs to exist for form submission.
                                     clicked_card = st.form_submit_button(
-                                        label="Ver Detalles",
+                                        label="Ver Detalles", # This label is hidden by CSS
                                         key=f"hidden_card_button_{idx}",
                                         help="Haz clic para ver los detalles de la patente"
                                     )
-                                    # If the hidden button is clicked, store the index and rerun
+                                    # If this hidden button is clicked, store the index and rerun
                                     if clicked_card:
                                         st.session_state.selected_patent_idx = idx
-                                        st.rerun()
+                                        st.rerun() # Rerun to switch to detail view
 
-                                # Call JavaScript to set up click listener for this specific card
-                                # This string will NOT be an f-string to avoid syntax issues.
-                                # Use .format() method for dynamic values in JavaScript string
-                                js_call_str = "<script>setupCardClickListener('{}', '{}');</script>".format(f"patent_card_div_{idx}", f"hidden_card_button_{idx}")
-                                st.markdown(js_call_str, unsafe_allow_html=True)
-                                
                 except Exception as e: # End of the try block, start of the except block
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
