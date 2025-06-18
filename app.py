@@ -8,11 +8,7 @@ import html
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
 
-# Initialize session state for selected patent for detail view
-if 'selected_patent_idx' not in st.session_state:
-    st.session_state.selected_patent_idx = None
-
-# Custom CSS for a better visual match to Google Patents style and detail view
+# Custom CSS for a better visual match to Google Patents style
 st.markdown(
     """
     <script src="https://cdn.tailwindcss.com"></script>
@@ -67,192 +63,71 @@ st.markdown(
         }
 
         /* --- Google Patents style for patent results --- */
-        .google-patent-card {
+        .google-patent-result-container { /* New container for each result block */
             background-color: #ffffff; /* White background */
             border: 1px solid #dadce0; /* Light gray border */
             border-radius: 8px; /* Slightly rounded corners */
-            padding: 0; /* Remove padding here to allow image to span full height */
+            padding: 1.25rem;
             margin-bottom: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            transition: box-shadow 0.2s ease;
             position: relative; /* For similarity score */
-            display: flex; /* Use flexbox for image and content layout */
-            align-items: stretch; /* Stretch items to fill the height */
-            min-height: 120px; /* Minimum height for the card, adjust as needed */
-            cursor: pointer; /* Indicate it's clickable */
         }
-        .google-patent-card:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
-        }
-        .patent-image-container {
-            flex-shrink: 0; /* Prevent image container from shrinking */
-            flex-basis: 120px; /* Fixed width for the image container, acts as width */
-            height: 100%; /* Make image container fill full height of the card */
-            margin-right: 0; /* Remove margin-right from here */
-            border-radius: 8px 0 0 8px; /* Rounded corners only on the left side */
-            overflow: hidden; /* Hide overflowing parts of the image */
+        .result-header {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0; /* Placeholder background */
-            padding: 0; /* Remove internal padding */
-        }
-        .patent-thumbnail {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Ensure image fills the container, cropping if necessary */
-            border-radius: 0; /* No radius, as container has it */
-        }
-        .google-patent-content-details { /* New class to wrap text content */
-            flex-grow: 1; /* Allow content to take remaining space */
-            padding: 1.25rem; /* Re-add padding inside the text content area */
-        }
-        .google-patent-title {
-            font-size: 1.15rem;
-            font-weight: 600; /* Semi-bold */
-            color: #1a0dab; /* Google blue link color */
-            margin-bottom: 0.4rem;
-            line-height: 1.3;
-        }
-        .google-patent-summary {
-            font-size: 0.9rem;
-            color: #4d5156; /* Darker gray for text */
+            align-items: flex-start; /* Align image and text to the top */
             margin-bottom: 0.5rem;
-            line-height: 1.5;
+            gap: 1rem; /* Space between image and text */
         }
-        .google-patent-meta {
-            font-size: 0.8rem;
-            color: #70757a; /* Lighter gray for metadata */
-            margin-top: 0.5rem;
-        }
-        /* Adjusting similarity score position for Google Patents style */
-        .similarity-score {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            background-color: #e0f2f7; /* Light blue background to contrast */
-            color: #20c997; /* Teal color */
-            padding: 0.15rem 0.4rem;
-            border-radius: 0.4rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            z-index: 10;
-        }
-        /* --- Detail View Styles --- */
-        .detail-view-container {
-            background-color: #ffffff;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            padding: 2.5rem;
-            margin-top: 2rem;
-        }
-        .detail-header {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 1.5rem;
-        }
-        .detail-content-wrapper {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
-        }
-        .detail-image-box {
+        .result-image-wrapper { /* Wrapper for the image to control its size and flex behavior */
             flex-shrink: 0;
-            width: 250px; /* Larger image in detail view */
-            height: 250px;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
+            width: 80px; /* Fixed width for the image container */
+            height: 80px; /* Fixed height for the image container */
+            border-radius: 4px;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f0f0f0;
+            background-color: #f0f0f0; /* Placeholder background */
         }
-        .detail-image {
+        .result-image {
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            border-radius: 8px;
+            object-fit: contain; /* Ensure image fits without cropping, maintaining aspect ratio */
+            border-radius: 4px;
         }
-        .detail-meta-summary-wrapper {
-            flex-grow: 1;
-            min-width: 300px; /* Ensure it doesn't get too small */
+        .result-text-content { /* Wrapper for title, summary, meta */
+            flex-grow: 1; /* Allows text content to take remaining space */
         }
-        .detail-meta-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1.5rem;
-        }
-        .detail-meta-table td {
-            padding: 0.5rem 0;
-            vertical-align: top;
-        }
-        .detail-meta-table td:first-child {
+        .result-title {
+            font-size: 1.15rem;
             font-weight: 600;
+            color: #1a0dab;
+            line-height: 1.3;
+            margin-bottom: 0.4rem;
+        }
+        .result-summary {
+            font-size: 0.9rem;
             color: #4d5156;
-            width: 120px; /* Fixed width for labels */
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
         }
-        .detail-meta-table td:last-child {
-            color: #4d5156;
+        .result-meta {
+            font-size: 0.8rem;
+            color: #70757a;
         }
-        .detail-summary-box {
-            background-color: #f8f9fa; /* Lighter background for summary */
-            border: 1px solid #e8eaed;
-            border-radius: 8px;
-            padding: 1rem;
-            font-size: 0.95rem;
-            color: #3c4043;
-            line-height: 1.6;
-        }
-        .back-button {
-            background-color: #607d8b !important; /* Grey-blue color */
-            color: white !important;
-            border-radius: 0.5rem !important;
-            padding: 0.75rem 1.25rem !important;
-            font-weight: 500 !important;
-            margin-top: 1.5rem !important;
-        }
-        .back-button:hover {
-            background-color: #455a64 !important; /* Darker grey-blue on hover */
+        .similarity-score-display { /* For displaying score without absolute positioning */
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #20c997; /* Teal color */
+            margin-left: auto; /* Push to the right */
+            background-color: #e0f2f7; /* Light blue background to contrast */
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.4rem;
         }
     </style>
     """,
     unsafe_allow_html=True
 )
-
-# Magnifying glass SVG (used in search button and patent cards)
-MAGNIFYING_GLASS_SVG = """
-<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
-</svg>
-"""
-
-# Inject JavaScript function for card click listener (Removed as detail view is out)
-# JS_CARD_CLICK_LISTENER_SCRIPT = """
-# <script>
-#     // Function to set up click listener for patent cards
-#     function setupCardClickListener(cardDivId, hiddenButtonKey) {
-#         const cardDiv = document.getElementById(cardDivId);
-#         const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
-#         if (cardDiv && hiddenButton) {
-#             if (!cardDiv._hasClickListener) {
-#                 cardDiv.onclick = (event) => {
-#                     event.preventDefault();
-#                     event.stopPropagation();
-#                     hiddenButton.click();
-#                 };
-#                 cardDiv._hasClickListener = true;
-#             }
-#         } else {
-#             console.warn(`Elements not found for setupCardClickListener: cardDivId=${cardDivId}, hiddenButtonKey=${hiddenButtonKey}`);
-#         }
-#     }
-# </script>
-# """
-# st.markdown(JS_CARD_CLICK_LISTENER_SCRIPT, unsafe_allow_html=True)
-
 
 # --- Functions for loading and processing data/models ---
 
@@ -423,14 +298,16 @@ with st.form(key='search_form', clear_on_submit=False):
                             # Display each patent result in a simplified Google Patents-like block
                             st.markdown(f"""
 <div class="google-patent-result-container">
-    <div class="flex items-start">
-        <img src="{patent_image_url if patent_image_url else default_image_url}" 
-             alt="" class="result-image" 
-             onerror="this.onerror=null;this.src='{default_image_url}';">
-        <div class="flex-1">
+    <div class="result-header">
+        <div class="result-image-wrapper">
+            <img src="{patent_image_url if patent_image_url else default_image_url}" 
+                 alt="" class="result-image" 
+                 onerror="this.onerror=null;this.src='{default_image_url}';">
+        </div>
+        <div class="result-text-content">
             <h3 class="result-title">{escaped_patent_title}</h3>
             <p class="result-summary">{escaped_patent_summary_short}</p>
-            <p class="result-meta">Patente: {patent_number_found} &nbsp;&nbsp; Similitud: {score:.2%}</p>
+            <p class="result-meta">Patente: {patent_number_found} <span class="similarity-score-display">Similitud: {score:.2%}</span></p>
         </div>
     </div>
 </div>
