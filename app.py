@@ -71,14 +71,13 @@ st.markdown(
             background-color: #ffffff; /* White background */
             border: 1px solid #dadce0; /* Light gray border */
             border-radius: 8px; /* Slightly rounded corners */
-            padding: 0; /* Remove padding here to allow image to span full height */
+            padding: 1.25rem;
             margin-bottom: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
             transition: box-shadow 0.2s ease;
             position: relative; /* For similarity score */
             display: flex; /* Use flexbox for image and content layout */
-            align-items: stretch; /* Stretch items to fill the height */
-            min-height: 120px; /* Minimum height for the card, adjust as needed */
+            align-items: flex-start; /* Align items to the top */
             cursor: pointer; /* Indicate it's clickable */
         }
         .google-patent-card:hover {
@@ -86,26 +85,24 @@ st.markdown(
         }
         .patent-image-container {
             flex-shrink: 0; /* Prevent image container from shrinking */
-            flex-basis: 120px; /* Fixed width for the image container, acts as width */
-            height: 100%; /* Make image container fill full height of the card */
-            margin-right: 0; /* Remove margin-right from here */
-            border-radius: 8px 0 0 8px; /* Rounded corners only on the left side */
+            width: 120px; /* Fixed width for the image container */
+            height: 120px; /* Fixed height for the image container */
+            margin-right: 1rem; /* Space between image and text */
+            border-radius: 4px; /* Slightly rounded corners for the image box */
             overflow: hidden; /* Hide overflowing parts of the image */
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: #f0f0f0; /* Placeholder background */
-            padding: 0; /* Remove internal padding */
         }
         .patent-thumbnail {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Ensure image fills the container, cropping if necessary */
-            border-radius: 0; /* No radius, as container has it */
+            object-fit: contain; /* Ensure image fits without cropping, maintaining aspect ratio */
+            border-radius: 4px;
         }
         .google-patent-content-details { /* New class to wrap text content */
             flex-grow: 1; /* Allow content to take remaining space */
-            padding: 1.25rem; /* Re-add padding inside the text content area */
         }
         .google-patent-title {
             font-size: 1.15rem;
@@ -230,32 +227,31 @@ MAGNIFYING_GLASS_SVG = """
 """
 
 # Inject JavaScript function for card click listener
-# Using .format() to avoid f-string parsing issues with JS braces
-JS_CARD_CLICK_LISTENER = """
+# Using .format() for the entire script string to avoid f-string parsing issues with JS braces.
+JS_CARD_CLICK_LISTENER_SCRIPT = """
 <script>
     // Function to set up click listener for patent cards
-    function setupCardClickListener(cardDivId, hiddenButtonKey) {
+    function setupCardClickListener(cardDivId, hiddenButtonKey) {{
         const cardDiv = document.getElementById(cardDivId);
-        // Ensure to select the button that is inside the form with the specific key
-        const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
+        const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${{hiddenButtonKey}}"]`);
 
-        if (cardDiv && hiddenButton) {
+        if (cardDiv && hiddenButton) {{
             // Use a flag to prevent multiple assignments
-            if (!cardDiv._hasClickListener) {
-                cardDiv.onclick = (event) => {
+            if (!cardDiv._hasClickListener) {{
+                cardDiv.onclick = (event) => {{
                     event.preventDefault(); // Prevent default behavior (e.g., text selection)
                     event.stopPropagation(); // Stop event propagation
                     hiddenButton.click(); // Programmatically click the hidden Streamlit submit button
-                };
+                }};
                 cardDiv._hasClickListener = true; // Mark as having listener
-            }
-        } else {
-            console.warn(`Elements not found for setupCardClickListener: cardDivId=${cardDivId}, hiddenButtonKey=${hiddenButtonKey}`);
-        }
-    }
+            }}
+        }} else {{
+            console.warn(`Elements not found for setupCardClickListener: cardDivId=${{cardDivId}}, hiddenButtonKey=${{hiddenButtonKey}}`);
+        }}
+    }}
 </script>
 """
-st.markdown(JS_CARD_CLICK_LISTENER, unsafe_allow_html=True)
+st.markdown(JS_CARD_CLICK_LISTENER_SCRIPT, unsafe_allow_html=True)
 
 
 # --- Functions for loading and processing data/models ---
@@ -407,15 +403,15 @@ if st.session_state.selected_patent_idx is not None:
     <table class="detail-meta-table">
         <tr>
             <td>Número:</td>
-            <td>{0}</td>
+            <td>{}</td>
         </tr>
         <tr>
             <td>Solicitante:</td>
-            <td>{1}</td>
+            <td>{}</td>
         </tr>
         <tr>
             <td>País:</td>
-            <td>{2}</td>
+            <td>{}</td>
         </tr>
     </table>
     """.format(html.escape(publication_number), html.escape(assignee), html.escape(publication_country)), unsafe_allow_html=True)
@@ -530,8 +526,9 @@ else:
 
                                 # Call JavaScript to set up click listener for this specific card
                                 # This string will NOT be an f-string to avoid syntax issues.
-                                js_call_str = "setupCardClickListener('patent_card_div_{}', 'hidden_card_button_{}');".format(idx, idx)
-                                st.markdown(f"<script>{js_call_str}</script>", unsafe_allow_html=True)
+                                # Use .format() method for dynamic values in JavaScript string
+                                js_call_str = "<script>setupCardClickListener('{}', '{}');</script>".format(f"patent_card_div_{idx}", f"hidden_card_button_{idx}")
+                                st.markdown(js_call_str, unsafe_allow_html=True)
                                 
                 except Exception as e: # End of the try block, start of the except block
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
