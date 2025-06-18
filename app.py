@@ -238,7 +238,7 @@ def process_patent_data(file_path):
                 'abstract (original language)',
                 'publication number',
                 'assignee - dwpi',        # New required column
-                'publication country',    # New required column
+                'publication country code', # Corrected column name as per user's data
             ]
             
             # Check if all required columns exist after normalization
@@ -253,7 +253,7 @@ def process_patent_data(file_path):
             original_abstract_col = 'abstract (original language)'
             publication_number_col = 'publication number'
             assignee_dwpi_col = 'assignee - dwpi'
-            publication_country_col = 'publication country'
+            publication_country_col = 'publication country code' # Corrected access
 
             # Fill null values with empty strings
             df[original_title_col] = df[original_title_col].fillna('')
@@ -317,7 +317,7 @@ if st.session_state.selected_patent_idx is not None:
     abstract = patent['abstract (original language)']
     publication_number = patent['publication number']
     assignee = patent['assignee - dwpi']
-    publication_country = patent['publication country']
+    publication_country = patent['publication country code'] # Corrected access
     image_url = patent['image_url_processed'] # Get processed image URL
     
     # Default image for onerror, if needed
