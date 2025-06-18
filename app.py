@@ -9,10 +9,11 @@ import html
 st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
 
 # Initialize session state for selected patent for detail view
+# This state variable will hold the index of the patent to display in the detail view
 if 'selected_patent_idx' not in st.session_state:
     st.session_state.selected_patent_idx = None
 
-# Custom CSS for a better visual match to Google Patents style and detail view
+# Custom CSS for a better visual match to Google Patents style
 st.markdown(
     """
     <script src="https://cdn.tailwindcss.com"></script>
@@ -67,74 +68,73 @@ st.markdown(
         }
 
         /* --- Google Patents style for patent results --- */
-        .google-patent-card {
+        .google-patent-result-container { /* New container for each result block */
             background-color: #ffffff; /* White background */
             border: 1px solid #dadce0; /* Light gray border */
             border-radius: 8px; /* Slightly rounded corners */
-            padding: 1.25rem; /* Re-added padding directly to the card */
+            padding: 1.25rem;
             margin-bottom: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            transition: box-shadow 0.2s ease;
-            position: relative; /* For similarity score and click overlay */
-            display: flex; /* Use flexbox for image and content layout */
-            align-items: flex-start; /* Align items to the top */
+            position: relative; /* For similarity score */
+            /* Removed cursor: pointer from here as it's handled by the detail button */
         }
-        .google-patent-card:hover {
+        .google-patent-result-container:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
         }
-        .patent-image-container {
-            flex-shrink: 0; /* Prevent image container from shrinking */
-            width: 120px; /* Fixed width for the image container */
-            height: 120px; /* Fixed height for the image container */
-            margin-right: 1rem; /* Space between image and text */
-            border-radius: 4px; /* Slightly rounded corners for the image box */
-            overflow: hidden; /* Hide overflowing parts of the image */
+        .result-header {
+            display: flex;
+            align-items: flex-start; /* Align image and text to the top */
+            margin-bottom: 0.5rem;
+            gap: 1rem; /* Space between image and text */
+        }
+        .result-image-wrapper { /* Wrapper for the image to control its size and flex behavior */
+            flex-shrink: 0;
+            width: 80px; /* Fixed width for the image container */
+            height: 80px; /* Fixed height for the image container */
+            border-radius: 4px;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: #f0f0f0; /* Placeholder background */
         }
-        .patent-thumbnail {
+        .result-image {
             width: 100%;
             height: 100%;
             object-fit: contain; /* Ensure image fits without cropping, maintaining aspect ratio */
             border-radius: 4px;
         }
-        .google-patent-content-details { /* New class to wrap text content */
-            flex-grow: 1; /* Allow content to take remaining space */
+        .result-text-content { /* Wrapper for title, summary, meta */
+            flex-grow: 1; /* Allows text content to take remaining space */
         }
-        .google-patent-title {
+        .result-title {
             font-size: 1.15rem;
-            font-weight: 600; /* Semi-bold */
-            color: #1a0dab; /* Google blue link color */
-            margin-bottom: 0.4rem;
+            font-weight: 600;
+            color: #1a0dab;
             line-height: 1.3;
+            margin-bottom: 0.4rem;
         }
-        .google-patent-summary {
+        .result-summary {
             font-size: 0.9rem;
-            color: #4d5156; /* Darker gray for text */
+            color: #4d5156;
             margin-bottom: 0.5rem;
             line-height: 1.5;
         }
-        .google-patent-meta {
+        .result-meta {
             font-size: 0.8rem;
-            color: #70757a; /* Lighter gray for metadata */
-            margin-top: 0.5rem;
+            color: #70757a;
         }
-        /* Adjusting similarity score position for Google Patents style */
-        .similarity-score {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            background-color: #e0f2f7; /* Light blue background to contrast */
+        .similarity-score-display { /* For displaying score without absolute positioning */
+            font-size: 0.8rem;
+            font-weight: 600;
             color: #20c997; /* Teal color */
+            margin-left: auto; /* Push to the right */
+            background-color: #e0f2f7; /* Light blue background to contrast */
             padding: 0.15rem 0.4rem;
             border-radius: 0.4rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            z-index: 10;
         }
-        /* --- Detail View Styles (simplified) --- */
+
+        /* --- Detail View Styles (basic) --- */
         .detail-view-container {
             background-color: #ffffff;
             border-radius: 1.5rem;
@@ -148,17 +148,31 @@ st.markdown(
             color: #1f2937;
             margin-bottom: 1.5rem;
         }
-        .detail-content {
-            font-size: 1rem;
-            color: #3c4043;
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
+        .detail-item {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
         }
-        .detail-content h4 {
-            font-size: 1.1rem;
+        .detail-item strong {
+            flex-shrink: 0;
+            width: 120px; /* Fixed width for labels */
             font-weight: 600;
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
+            color: #4d5156;
+        }
+        .detail-item span, .detail-item p {
+            flex-grow: 1;
+            color: #3c4043;
+            line-height: 1.5;
+        }
+        .detail-image-full-width {
+            width: 100%;
+            max-height: 300px; /* Max height for detail image */
+            object-fit: contain;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
         }
         .back-button {
             background-color: #607d8b !important; /* Grey-blue color */
@@ -171,41 +185,10 @@ st.markdown(
         .back-button:hover {
             background-color: #455a64 !important; /* Darker grey-blue on hover */
         }
-        /* Style to make the hidden st.form_submit_button cover the entire custom card */
-        /* This targets the div that Streamlit creates for the button widget */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 5; /* Ensure it's clickable above card content, but below similarity score if present */
-            background-color: transparent !important;
-            color: transparent !important;
-            border: none !important;
-            cursor: pointer !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            /* Hide the text label of the button */
-            font-size: 0 !important; /* Hide text */
-            line-height: 0 !important; /* Collapse line height */
-            overflow: hidden !important; /* Hide overflow */
-        }
-        /* Ensure the actual button element inside is also hidden */
-        div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] > * {
-            display: none !important;
-        }
     </style>
     """,
     unsafe_allow_html=True
 )
-
-# Magnifying glass SVG (used in search button and patent cards)
-MAGNIFYING_GLASS_SVG = """
-<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
-</svg>
-"""
 
 # --- Functions for loading and processing data/models ---
 
@@ -337,9 +320,40 @@ if st.session_state.selected_patent_idx is not None:
     st.markdown("<div class='detail-view-container'>", unsafe_allow_html=True)
     st.markdown(f"<h1 class='detail-header'>{html.escape(title)}</h1>", unsafe_allow_html=True)
     
-    # Simplified detail view content (Title and Abstract only for now, as requested)
-    st.markdown("<h4>Resumen:</h4>", unsafe_allow_html=True)
-    st.markdown(f"<p>{html.escape(abstract)}</p>", unsafe_allow_html=True)
+    # Detail content (field: value pairs)
+    st.markdown("""
+    <div class="detail-item">
+        <strong>Patente:</strong> <span>{}</span>
+    </div>
+    <div class="detail-item">
+        <strong>Solicitante:</strong> <span>{}</span>
+    </div>
+    <div class="detail-item">
+        <strong>País:</strong> <span>{}</span>
+    </div>
+    """.format(html.escape(publication_number), html.escape(assignee), html.escape(publication_country)), unsafe_allow_html=True)
+
+    # Summary and Image
+    st.markdown("<div class='detail-content-wrapper'>", unsafe_allow_html=True)
+    
+    # Image Box (simplified as per request)
+    st.markdown(f"""
+    <div class="detail-image-box">
+        <img src="{image_url if image_url else default_image_url}" 
+             alt="[Image of {html.escape(title)}]" class="detail-image" 
+             onerror="this.onerror=null;this.src='{default_image_url}';">
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Summary (full abstract)
+    st.markdown(f"""
+    <div class="detail-summary-box">
+        <h4>Resumen:</h4>
+        <p>{html.escape(abstract)}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True) # Close detail-content-wrapper
 
     # Back Button
     if st.button("Volver a la búsqueda", key="back_to_search", help="Regresar a la lista de resultados"):
@@ -411,22 +425,22 @@ else:
                                 # Wrap each card in a form for clickability
                                 # The hidden submit button will now cover the card visually for click detection
                                 with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
-                                    card_html = """
+                                    card_html = f"""
     <div class="google-patent-card">
-        <div class="similarity-score">Similitud: {0:.2%}</div>
+        <div class="similarity-score">Similitud: {score:.2%}</div>
         <div class="patent-image-container">
-            <img src="{1}" 
-                 alt="[Image of {2}]" class="patent-thumbnail" 
-                 onerror="this.onerror=null;this.src='{3}';">
+            <img src="{patent_image_url if patent_image_url else default_image_url}" 
+                 alt="[Image of {escaped_patent_title}]" class="patent-thumbnail" 
+                 onerror="this.onerror=null;this.src='{default_image_url}';">
         </div>
         <div class="google-patent-content-details">
-            <p class="google-patent-title">{4}</p>
-            <p class="google-patent-summary">{5}</p>
-            <p class="google-patent-meta">Patente: {6}</p>
+            <p class="google-patent-title">{escaped_patent_title}</p>
+            <p class="google-patent-summary">{escaped_patent_summary_short}</p>
+            <p class="google-patent-meta">Patente: {patent_number_found}</p>
         </div>
         <button type="submit" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; background: transparent;"></button>
     </div>
-    """.format(score, patent_image_url if patent_image_url else default_image_url, escaped_patent_title, default_image_url, escaped_patent_title, escaped_patent_summary_short, patent_number_found)
+    """
                                     st.markdown(card_html, unsafe_allow_html=True)
                                     
                                     # Hidden button that gets clicked by the overlaying transparent button
