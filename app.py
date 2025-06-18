@@ -71,41 +71,37 @@ st.markdown(
             background-color: #ffffff; /* White background */
             border: 1px solid #dadce0; /* Light gray border */
             border-radius: 8px; /* Slightly rounded corners */
-            padding: 0; /* Remove padding here to allow image to span full height */
+            padding: 1.25rem; /* Re-added padding directly to the card */
             margin-bottom: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
             transition: box-shadow 0.2s ease;
-            position: relative; /* For similarity score */
+            position: relative; /* For similarity score and click overlay */
             display: flex; /* Use flexbox for image and content layout */
-            align-items: stretch; /* Stretch items to fill the height */
-            min-height: 120px; /* Minimum height for the card, adjust as needed */
-            cursor: pointer; /* Indicate it's clickable */
+            align-items: flex-start; /* Align items to the top */
         }
         .google-patent-card:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
         }
         .patent-image-container {
             flex-shrink: 0; /* Prevent image container from shrinking */
-            flex-basis: 120px; /* Fixed width for the image container, acts as width */
-            height: 100%; /* Make image container fill full height of the card */
-            margin-right: 0; /* Remove margin-right from here */
-            border-radius: 8px 0 0 8px; /* Rounded corners only on the left side */
+            width: 120px; /* Fixed width for the image container */
+            height: 120px; /* Fixed height for the image container */
+            margin-right: 1rem; /* Space between image and text */
+            border-radius: 4px; /* Slightly rounded corners for the image box */
             overflow: hidden; /* Hide overflowing parts of the image */
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: #f0f0f0; /* Placeholder background */
-            padding: 0; /* Remove internal padding */
         }
         .patent-thumbnail {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Ensure image fills the container, cropping if necessary */
-            border-radius: 0; /* No radius, as container has it */
+            object-fit: contain; /* Ensure image fits without cropping, maintaining aspect ratio */
+            border-radius: 4px;
         }
         .google-patent-content-details { /* New class to wrap text content */
             flex-grow: 1; /* Allow content to take remaining space */
-            padding: 1.25rem; /* Re-add padding inside the text content area */
         }
         .google-patent-title {
             font-size: 1.15rem;
@@ -138,7 +134,7 @@ st.markdown(
             font-weight: 600;
             z-index: 10;
         }
-        /* --- Detail View Styles --- */
+        /* --- Detail View Styles (simplified) --- */
         .detail-view-container {
             background-color: #ffffff;
             border-radius: 1.5rem;
@@ -152,59 +148,17 @@ st.markdown(
             color: #1f2937;
             margin-bottom: 1.5rem;
         }
-        .detail-content-wrapper {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
-        }
-        .detail-image-box {
-            flex-shrink: 0;
-            width: 250px; /* Larger image in detail view */
-            height: 250px;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
-        }
-        .detail-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border-radius: 8px;
-        }
-        .detail-meta-summary-wrapper {
-            flex-grow: 1;
-            min-width: 300px; /* Ensure it doesn't get too small */
-        }
-        .detail-meta-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1.5rem;
-        }
-        .detail-meta-table td {
-            padding: 0.5rem 0;
-            vertical-align: top;
-        }
-        .detail-meta-table td:first-child {
-            font-weight: 600;
-            color: #4d5156;
-            width: 120px; /* Fixed width for labels */
-        }
-        .detail-meta-table td:last-child {
-            color: #4d5156;
-        }
-        .detail-summary-box {
-            background-color: #f8f9fa; /* Lighter background for summary */
-            border: 1px solid #e8eaed;
-            border-radius: 8px;
-            padding: 1rem;
-            font-size: 0.95rem;
+        .detail-content {
+            font-size: 1rem;
             color: #3c4043;
             line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        .detail-content h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
         }
         .back-button {
             background-color: #607d8b !important; /* Grey-blue color */
@@ -218,7 +172,7 @@ st.markdown(
             background-color: #455a64 !important; /* Darker grey-blue on hover */
         }
         /* Style to make the hidden st.form_submit_button cover the entire custom card */
-        /* This div is the container that Streamlit creates for the button widget */
+        /* This targets the div that Streamlit creates for the button widget */
         div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div > button[data-testid^="stFormSubmitButton"] {
             position: absolute;
             top: 0;
@@ -252,35 +206,6 @@ MAGNIFYING_GLASS_SVG = """
     <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.327 3.328a.75.75 0 11-1.06 1.06l-3.328-3.327A7 7 0 012 9z" clip-rule="evenodd" />
 </svg>
 """
-
-# Define the JavaScript function to set up card click listener as a standard Python string
-# This string is NOT an f-string to avoid syntax issues with JS braces.
-JS_CARD_CLICK_LISTENER_TEMPLATE = """
-<script>
-    // Function to set up click listener for patent cards
-    function setupCardClickListener(cardDivId, hiddenButtonKey) {
-        const cardDiv = document.getElementById(cardDivId);
-        // Ensure to select the button that is inside the form with the specific key
-        const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
-
-        if (cardDiv && hiddenButton) {
-            // Use a flag to prevent multiple assignments
-            if (!cardDiv._hasClickListener) {
-                cardDiv.onclick = (event) => {
-                    event.preventDefault(); // Prevent default behavior (e.g., text selection)
-                    event.stopPropagation(); // Stop event propagation
-                    hiddenButton.click(); // Programmatically click the hidden Streamlit submit button
-                };
-                cardDiv._hasClickListener = true; // Mark as having listener
-            }
-        } else {
-            console.warn(`Elements not found for setupCardClickListener: cardDivId=${cardDivId}, hiddenButtonKey=${hiddenButtonKey}`);
-        }
-    }
-</script>
-"""
-st.markdown(JS_CARD_CLICK_LISTENER_SCRIPT, unsafe_allow_html=True)
-
 
 # --- Functions for loading and processing data/models ---
 
@@ -412,48 +337,9 @@ if st.session_state.selected_patent_idx is not None:
     st.markdown("<div class='detail-view-container'>", unsafe_allow_html=True)
     st.markdown(f"<h1 class='detail-header'>{html.escape(title)}</h1>", unsafe_allow_html=True)
     
-    st.markdown("<div class='detail-content-wrapper'>", unsafe_allow_html=True)
-    
-    # Image Box
-    st.markdown(f"""
-    <div class="detail-image-box">
-        <img src="{image_url if image_url else default_image_url}" 
-             alt="[Image of {html.escape(title)}]" class="detail-image" 
-             onerror="this.onerror=null;this.src='{default_image_url}';">
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Metadata and Summary Wrapper
-    st.markdown("<div class='detail-meta-summary-wrapper'>", unsafe_allow_html=True)
-    
-    # Metadata Table
-    st.markdown("""
-    <table class="detail-meta-table">
-        <tr>
-            <td>Número:</td>
-            <td>{}</td>
-        </tr>
-        <tr>
-            <td>Solicitante:</td>
-            <td>{}</td>
-        </tr>
-        <tr>
-            <td>País:</td>
-            <td>{}</td>
-        </tr>
-    </table>
-    """.format(html.escape(publication_number), html.escape(assignee), html.escape(publication_country)), unsafe_allow_html=True)
-
-    # Summary Box
-    st.markdown(f"""
-    <div class="detail-summary-box">
-        <h4>Resumen:</h4>
-        <p>{html.escape(abstract)}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("</div>", unsafe_allow_html=True) # Close detail-meta-summary-wrapper
-    st.markdown("</div>", unsafe_allow_html=True) # Close detail-content-wrapper
+    # Simplified detail view content (Title and Abstract only for now, as requested)
+    st.markdown("<h4>Resumen:</h4>", unsafe_allow_html=True)
+    st.markdown(f"<p>{html.escape(abstract)}</p>", unsafe_allow_html=True)
 
     # Back Button
     if st.button("Volver a la búsqueda", key="back_to_search", help="Regresar a la lista de resultados"):
