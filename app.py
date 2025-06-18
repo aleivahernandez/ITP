@@ -253,6 +253,35 @@ MAGNIFYING_GLASS_SVG = """
 </svg>
 """
 
+# Inject JavaScript function for card click listener
+# Using .format() for the entire script string to avoid f-string parsing issues with JS braces.
+JS_CARD_CLICK_LISTENER_SCRIPT = """
+<script>
+    // Function to set up click listener for patent cards
+    function setupCardClickListener(cardDivId, hiddenButtonKey) {
+        const cardDiv = document.getElementById(cardDivId);
+        // Ensure to select the button that is inside the form with the specific key
+        const hiddenButton = document.querySelector(`button[data-testid="stFormSubmitButton"][key="${hiddenButtonKey}"]`);
+
+        if (cardDiv && hiddenButton) {
+            // Use a flag to prevent multiple assignments
+            if (!cardDiv._hasClickListener) {
+                cardDiv.onclick = (event) => {
+                    event.preventDefault(); // Prevent default behavior (e.g., text selection)
+                    event.stopPropagation(); // Stop event propagation
+                    hiddenButton.click(); // Programmatically click the hidden Streamlit submit button
+                };
+                cardDiv._hasClickListener = true; // Mark as having listener
+            }
+        } else {
+            console.warn(`Elements not found for setupCardClickListener: cardDivId=${cardDivId}, hiddenButtonKey=${hiddenButtonKey}`);
+        }
+    }
+</script>
+"""
+st.markdown(JS_CARD_CLICK_LISTENER_SCRIPT, unsafe_allow_html=True)
+
+
 # --- Functions for loading and processing data/models ---
 
 @st.cache_resource
@@ -496,26 +525,25 @@ else:
                                 # Wrap each card in a form for clickability
                                 # The hidden submit button will now cover the card visually for click detection
                                 with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
-                                    card_html = f"""
+                                    card_html = """
     <div class="google-patent-card">
-        <div class="similarity-score">Similitud: {score:.2%}</div>
+        <div class="similarity-score">Similitud: {0:.2%}</div>
         <div class="patent-image-container">
-            <img src="{patent_image_url if patent_image_url else default_image_url}" 
-                 alt="[Image of {escaped_patent_title}]" class="patent-thumbnail" 
-                 onerror="this.onerror=null;this.src='{default_image_url}';">
+            <img src="{1}" 
+                 alt="[Image of {2}]" class="patent-thumbnail" 
+                 onerror="this.onerror=null;this.src='{3}';">
         </div>
         <div class="google-patent-content-details">
-            <p class="google-patent-title">{escaped_patent_title}</p>
-            <p class="google-patent-summary">{escaped_patent_summary_short}</p>
-            <p class="google-patent-meta">Patente: {patent_number_found}</p>
+            <p class="google-patent-title">{4}</p>
+            <p class="google-patent-summary">{5}</p>
+            <p class="google-patent-meta">Patente: {6}</p>
         </div>
         <button type="submit" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; background: transparent;"></button>
     </div>
-    """
+    """.format(score, patent_image_url if patent_image_url else default_image_url, escaped_patent_title, default_image_url, escaped_patent_title, escaped_patent_summary_short, patent_number_found)
                                     st.markdown(card_html, unsafe_allow_html=True)
                                     
-                                    # This hidden button will now overlay the card visually and handle the click
-                                    # Its label is hidden by CSS, but it needs to exist for form submission.
+                                    # Hidden button that gets clicked by the overlaying transparent button
                                     clicked_card = st.form_submit_button(
                                         label="Ver Detalles", # This label is hidden by CSS
                                         key=f"hidden_card_button_{idx}",
@@ -525,6 +553,6 @@ else:
                                     if clicked_card:
                                         st.session_state.selected_patent_idx = idx
                                         st.rerun() # Rerun to switch to detail view
-
+                                
                 except Exception as e: # End of the try block, start of the except block
                     st.error(f"Ocurrió un error durante la búsqueda: {e}")
