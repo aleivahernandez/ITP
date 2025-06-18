@@ -76,10 +76,9 @@ st.markdown(
             margin-bottom: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
             transition: box-shadow 0.2s ease;
-            position: relative; /* For similarity score */
+            position: relative; /* For similarity score and click overlay */
             display: flex; /* Use flexbox for image and content layout */
             align-items: flex-start; /* Align items to the top */
-            /* Removed cursor: pointer from here as it's handled by a separate Streamlit button now */
         }
         .google-patent-card:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
@@ -104,6 +103,7 @@ st.markdown(
         }
         .google-patent-content-details { /* New class to wrap text content */
             flex-grow: 1; /* Allow content to take remaining space */
+            padding: 1.25rem; /* Re-add padding inside the text content area */
         }
         .google-patent-title {
             font-size: 1.15rem;
@@ -230,6 +230,7 @@ def process_patent_data(file_path):
 
             # Normalize column names: strip spaces and convert to lowercase
             df.columns = df.columns.str.strip().str.lower()
+            st.write(f"Columnas encontradas en el archivo después de la normalización: {df.columns.tolist()}") # DEBUG PRINT
 
             # Define required columns after normalization
             required_columns_normalized = [
