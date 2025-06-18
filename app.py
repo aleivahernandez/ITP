@@ -153,18 +153,10 @@ def process_patent_data(file_path):
     """
     if file_path:
         try:
-            # Determine file type and read accordingly
-            if file_path.endswith('.csv'):
-                df = pd.read_csv(file_path)
-            elif file_path.endswith('.xlsx'):
-                df = pd.read_excel(file_path)
-            else:
-                st.error("Formato de archivo no soportado. Por favor, sube un archivo .csv o .xlsx.")
-                return None, None
+            df = pd.read_excel(file_path)
 
             # Normalize column names: strip spaces and convert to lowercase
             df.columns = df.columns.str.strip().str.lower()
-            st.write(f"Columnas encontradas en el archivo después de la normalización: {df.columns.tolist()}") # DEBUG PRINT
 
             # Define required columns after normalization
             required_columns_normalized = [
