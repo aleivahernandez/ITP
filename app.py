@@ -72,13 +72,14 @@ st.markdown(
             background-color: #ffffff; /* White background */
             border: 1px solid #dadce0; /* Light gray border */
             border-radius: 8px; /* Slightly rounded corners */
-            padding: 1.25rem; /* Re-added padding directly to the card */
+            padding: 1.25rem; 
             margin-bottom: 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
             transition: box-shadow 0.2s ease;
-            position: relative; /* For similarity score and click overlay */
+            position: relative; /* For similarity score */
             display: flex; /* Use flexbox for image and content layout */
             align-items: flex-start; /* Align items to the top */
+            /* cursor: pointer; removed since the button is now explicit */
         }
         .google-patent-card:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
@@ -103,7 +104,6 @@ st.markdown(
         }
         .google-patent-content-details { /* New class to wrap text content */
             flex-grow: 1; /* Allow content to take remaining space */
-            padding: 1.25rem; /* Re-add padding inside the text content area */
         }
         .google-patent-title {
             font-size: 1.15rem;
@@ -150,17 +150,31 @@ st.markdown(
             color: #1f2937;
             margin-bottom: 1.5rem;
         }
-        .detail-content {
-            font-size: 1rem;
-            color: #3c4043;
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
+        .detail-item {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
         }
-        .detail-content h4 {
-            font-size: 1.1rem;
+        .detail-item strong {
+            flex-shrink: 0;
+            width: 120px; /* Fixed width for labels */
             font-weight: 600;
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
+            color: #4d5156;
+        }
+        .detail-item span, .detail-item p {
+            flex-grow: 1;
+            color: #3c4043;
+            line-height: 1.5;
+        }
+        .detail-image-full-width {
+            width: 100%;
+            max-height: 300px; /* Max height for detail image */
+            object-fit: contain;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
         }
         .back-button {
             background-color: #607d8b !important; /* Grey-blue color */
@@ -172,16 +186,6 @@ st.markdown(
         }
         .back-button:hover {
             background-color: #455a64 !important; /* Darker grey-blue on hover */
-        }
-        /* IMPORTANT: This style hides the hidden "Ver Detalles" button */
-        button[data-testid^="stFormSubmitButton"][key^="hidden_card_button_"] {
-            display: none !important;
-            height: 0 !important;
-            width: 0 !important;
-            overflow: hidden !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
         }
     </style>
     """,
@@ -369,9 +373,7 @@ else:
                 st.warning("Por favor, ingresa una descripción del problema.")
             else:
                 with st.spinner("Buscando patentes relevantes..."):
-                    # The try-except block here is the last one in the main search logic.
-                    # It's intended to catch errors during the search and display, not related to parsing HTML.
-                    try: 
+                    try: # Start of the try block
                         current_model = load_embedding_model()
                         query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
 
@@ -399,13 +401,11 @@ else:
                                 # Default image for onerror, if needed
                                 default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image" 
                                 
-                                # Wrap each card in a form for clickability
-                                # The hidden submit button will now cover the card visually for click detection
+                                # Display each patent result in a simplified Google Patents-like block
+                                # Now, the card itself is the clickable area, and the button is hidden within.
                                 with st.form(key=f"patent_card_form_{idx}", clear_on_submit=False):
-                                    # Define the HTML string as a normal string using string.Template
-                                    # This avoids f-string parsing issues with nested braces in JS/CSS-like syntax.
                                     card_html_template = Template("""
-    <div class="google-patent-card">
+    <div class="google-patent-card" id="patent_card_div_${idx}">
         <div class="similarity-score">Similitud: ${score_percent}</div>
         <div class="patent-image-container">
             <img src="${image_url}" 
@@ -430,7 +430,8 @@ else:
                                     )
                                     st.markdown(card_html, unsafe_allow_html=True)
                                     
-                                    # Hidden button that gets clicked by the overlaying transparent button
+                                    # This hidden button serves as the actual trigger for Streamlit's form submission.
+                                    # It is overlaid by the transparent <button> within the HTML string.
                                     clicked_card = st.form_submit_button(
                                         label="Ver Detalles", # This label is hidden by CSS
                                         key=f"hidden_card_button_{idx}",
