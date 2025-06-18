@@ -253,9 +253,9 @@ MAGNIFYING_GLASS_SVG = """
 </svg>
 """
 
-# Inject JavaScript function for card click listener
-# Using .format() for the entire script string to avoid f-string parsing issues with JS braces.
-JS_CARD_CLICK_LISTENER_SCRIPT = """
+# Define the JavaScript function to set up card click listener as a standard Python string
+# This string is NOT an f-string to avoid syntax issues with JS braces.
+JS_CARD_CLICK_LISTENER_TEMPLATE = """
 <script>
     // Function to set up click listener for patent cards
     function setupCardClickListener(cardDivId, hiddenButtonKey) {
