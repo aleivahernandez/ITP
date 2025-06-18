@@ -140,28 +140,19 @@ def load_embedding_model():
     """
     with st.spinner("Cargando el modelo de embeddings (esto puede tardar un momento)..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        st.success("Modelo de embeddings cargado correctamente.")
     return model
 
 @st.cache_data
 def process_patent_data(file_path):
     """
-    Processes the patent file from a local path (CSV or Excel).
     Reads the file, combines title and summary, gets image URLs (from GitHub), and generates the embeddings.
     `st.cache_data` is used to cache processed data
     and generated embeddings, avoiding unnecessary reprocessing.
     """
     if file_path:
         try:
-            # Determine file type and read accordingly
-            if file_path.endswith('.csv'):
-                df = pd.read_csv(file_path)
-            elif file_path.endswith('.xlsx'):
-                df = pd.read_excel(file_path)
-            else:
-                st.error("Formato de archivo no soportado. Por favor, sube un archivo .csv o .xlsx.")
-                return None, None
-
+            df = pd.read_excel(file_path)
+            
             # Normalize column names: strip spaces and convert to lowercase
             df.columns = df.columns.str.strip().str.lower()
 
@@ -170,8 +161,6 @@ def process_patent_data(file_path):
                 'title (original language)',
                 'abstract (original language)',
                 'publication number',
-                # Removed 'assignee - dwpi', # Not needed in this view
-                # Removed 'publication country', # Not needed in this view
             ]
             
             # Check if all required columns exist after normalization
@@ -242,7 +231,7 @@ st.markdown("<p class='text-gray-600 mb-6'>Describe tu problema técnico o neces
 
 
 # Fixed number of results, no slider
-MAX_RESULTS = 3
+MAX_RESULTS = 4
 
 # Use a form to capture the text input and button press together for better UX
 with st.form(key='search_form', clear_on_submit=False):
