@@ -299,7 +299,7 @@ elif st.session_state.current_view == 'detail':
         """, unsafe_allow_html=True)
 
         # 2. Crear dos columnas para la imagen y el resumen
-        col1, col2 = st.columns([0.5, 0.5], gap="large")
+        col1, col2 = st.columns([0.5, 0.5], gap="small")
 
         with col1:
             # Usar un contenedor con borde para la imagen y su título
