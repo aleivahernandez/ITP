@@ -113,12 +113,13 @@ st.markdown(
             padding: 0.15rem 0.4rem;
             border-radius: 0.4rem;
         }
-        .content-box-bordered {
-            border: 2px solid #e0f2f7; /* Borde del color de fondo de la app */
+        
+        /* --- ESTILOS PARA VISTA DE DETALLE --- */
+        .title-box {
+            background-color: #e0f2f7; /* Color de fondo igual al del borde anterior */
             padding: 1rem 1.5rem;
             border-radius: 0.75rem;
             margin-bottom: 1.5rem;
-            height: 100%; /* Asegura que las cajas tengan la misma altura */
         }
         .full-patent-title {
             font-size: 1.8rem;
@@ -292,9 +293,9 @@ if st.session_state.current_view == 'search':
 elif st.session_state.current_view == 'detail':
     patent = st.session_state.selected_patent
     if patent:
-        # 1. Título de ancho completo con borde
+        # 1. Título de ancho completo con fondo
         st.markdown(f"""
-        <div class="content-box-bordered">
+        <div class="title-box">
             <h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>
         </div>
         """, unsafe_allow_html=True)
@@ -303,25 +304,17 @@ elif st.session_state.current_view == 'detail':
         col1, col2 = st.columns([0.5, 0.5], gap="small")
 
         with col1:
-            # Contenedor para la imagen y su título
-            st.markdown("""
-            <div class='content-box-bordered'>
-                <h2 class='detail-subtitle'>Imagen</h2>
-            """, unsafe_allow_html=True)
-            default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
-            st.image(patent.get('image_url') or default_image, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
+            # Usar un contenedor con borde para la imagen y su título
+            with st.container(border=True):
+                 st.markdown("<h2 class='detail-subtitle'>Imagen</h2>", unsafe_allow_html=True)
+                 default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
+                 st.image(patent.get('image_url') or default_image, use_container_width=True)
 
         with col2:
-            # Contenedor para el resumen y su título
-            summary_html = f"""
-            <div class='content-box-bordered'>
-                <h2 class='detail-subtitle'>Resumen</h2>
-                <p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>
-            </div>
-            """
-            st.markdown(summary_html, unsafe_allow_html=True)
+            # Usar un contenedor con borde para el resumen y su título
+            with st.container(border=True):
+                st.markdown("<h2 class='detail-subtitle'>Resumen</h2>", unsafe_allow_html=True)
+                st.markdown(f"<p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>", unsafe_allow_html=True)
 
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
