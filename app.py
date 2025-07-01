@@ -56,8 +56,8 @@ st.markdown(
             background-color: #1aae89 !important;
         }
         /* Adjust default paragraph font size for st.markdown */
-        .st-emotion-cache-16idsys p, 
-        .st-emotion-cache-1s2a8v p { 
+        .st-emotion-cache-16idsys p,
+        .st-emotion-cache-1s2a8v p {
             font-size: 1rem;
         }
         /* Hide the default label for st.text_area */
@@ -130,7 +130,7 @@ st.markdown(
 
         /* --- Styles for the full patent view (Detail View) --- */
         .detail-content-wrapper {
-            padding-top: 0.5rem; 
+            padding-top: 0.5rem;
             padding-bottom: 0.5rem;
         }
 
@@ -247,7 +247,7 @@ def process_patent_data(file_path):
                 'abstract (original language)',
                 'publication number',
             ]
-            
+
             # Verifica si todas las columnas requeridas existen después de la normalización
             for col in required_columns_normalized:
                 if col not in df.columns:
@@ -294,7 +294,7 @@ def process_patent_data(file_path):
 # --- Automatic local Excel file loading section ---
 
 # The name of the local patent file in the same repository
-excel_file_name = "patentes.xlsx" 
+excel_file_name = "patentes.xlsx"
 
 # Initialize df_patents and patent_embeddings
 df_patents = None
@@ -326,7 +326,7 @@ def show_search_view():
     st.session_state.current_view = 'search'
     st.session_state.selected_patent = None
     # No borramos los resultados para que el usuario pueda volver a ellos
-    # st.session_state.search_results = [] 
+    # st.session_state.search_results = []
 
 def show_patent_detail(patent_data):
     st.session_state.current_view = 'detail'
@@ -351,7 +351,7 @@ if st.session_state.current_view == 'search':
             key="problem_description_input_area",
             placeholder="Escribe aquí tu necesidad apícola..."
         )
-        
+
         # This is the Streamlit form submit button.
         submitted = st.form_submit_button("Buscar Soluciones", type="primary")
 
@@ -365,7 +365,7 @@ if st.session_state.current_view == 'search':
                 st.session_state.search_results = [] # Clear results if query is empty
             else:
                 with st.spinner("Buscando patentes relevantes..."):
-                    try: 
+                    try:
                         current_model = load_embedding_model()
                         query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
 
@@ -378,9 +378,9 @@ if st.session_state.current_view == 'search':
                             score = cosine_scores[idx].item()
                             patent_title = df_patents.iloc[idx]['title (original language)']
                             patent_summary = df_patents.iloc[idx]['abstract (original language)']
-                            patent_image_url = df_patents.iloc[idx]['image_url_processed'] 
+                            patent_image_url = df_patents.iloc[idx]['image_url_processed']
                             patent_number_found = df_patents.iloc[idx]['publication number']
-                            
+
                             results_to_display.append({
                                 'title': patent_title,
                                 'abstract': patent_summary,
@@ -389,26 +389,26 @@ if st.session_state.current_view == 'search':
                                 'score': score
                             })
                         st.session_state.search_results = results_to_display
-                        
-                    except Exception as e: 
+
+                    except Exception as e:
                         st.error(f"Ocurrió un error durante la búsqueda: {e}")
                         st.session_state.search_results = [] # Clear results on error
 
     # Display search results OUTSIDE the form
     if st.session_state.search_results:
-        st.subheader("Resultados de la búsqueda:") 
+        st.subheader("Resultados de la búsqueda:")
         for i, patent_data in enumerate(st.session_state.search_results):
             escaped_patent_title = html.escape(patent_data['title'])
             escaped_patent_summary_short = html.escape(patent_data['abstract'][:100]) + "..."
-            default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image" 
-            
+            default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image"
+
             with st.container(border=False):
                 st.markdown(f"""
 <div class="google-patent-result-container">
     <div class="result-header">
         <div class="result-image-wrapper">
-            <img src="{patent_data['image_url'] if patent_data['image_url'] else default_image_url}" 
-                 alt="" class="result-image" 
+            <img src="{patent_data['image_url'] if patent_data['image_url'] else default_image_url}"
+                 alt="Imagen de la patente" class="result-image"
                  onerror="this.onerror=null;this.src='{default_image_url}';">
         </div>
         <div class="result-text-content">
@@ -421,9 +421,9 @@ if st.session_state.current_view == 'search':
 """, unsafe_allow_html=True)
                 # Add a button to view full details
                 st.button(
-                    "Ver Detalles Completos", 
+                    "Ver Detalles Completos",
                     key=f"view_patent_{i}", # Unique key for each button
-                    on_click=show_patent_detail, 
+                    on_click=show_patent_detail,
                     args=(patent_data,), # Pass the full patent_data to the callback
                     use_container_width=True
                 )
@@ -438,12 +438,12 @@ elif st.session_state.current_view == 'detail':
     if selected_patent:
         # Envoltorio para todo el contenido del detalle
         st.markdown("<div class='detail-content-wrapper'>", unsafe_allow_html=True)
-        
+
         # 1. Título de ancho completo
         st.markdown(f"<h1 class='full-patent-title'>{html.escape(selected_patent['title'])}</h1>", unsafe_allow_html=True)
-        
-        # --- INICIO: ESTRUCTURA DE 2 COLUMNAS ---
-        
+
+        # --- ESTRUCTURA DE 2 COLUMNAS ---
+
         # Prepara la columna de la imagen (solo si existe una URL)
         image_column_html = ""
         if selected_patent.get('image_url'):
@@ -452,8 +452,8 @@ elif st.session_state.current_view == 'detail':
                 <img src="{selected_patent['image_url']}" alt="Imagen de la patente">
             </div>
             """
-        
-        # Construye el cuerpo principal que contiene las columnas
+
+        # Construye el cuerpo principal que contiene la imagen y el resumen
         body_html = f"""
         <div class='detail-body-container'>
             {image_column_html}
@@ -463,21 +463,21 @@ elif st.session_state.current_view == 'detail':
         </div>
         """
 
-        # Llama a st.markdown UNA SOLA VEZ para el cuerpo, asegurando que se interprete el HTML
+        # Renderiza el string 'body_html' interpretándolo como código HTML.
         st.markdown(body_html, unsafe_allow_html=True)
-        
-        # --- FIN: ESTRUCTURA ---
+
+        # --- FIN DE LA ESTRUCTURA ---
 
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {selected_patent['publication_number']}</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True) # Cierra detail-content-wrapper
-        
+
         st.button(
-            "Volver a la Búsqueda", 
-            on_click=show_search_view, 
-            key="back_to_search_btn", 
-            help="Regresar a la página de resultados de búsqueda.", 
-            type="secondary", 
+            "Volver a la Búsqueda",
+            on_click=show_search_view,
+            key="back_to_search_btn",
+            help="Regresar a la página de resultados de búsqueda.",
+            type="secondary",
             use_container_width=True
         )
     else:
