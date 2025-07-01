@@ -225,7 +225,6 @@ def show_patent_detail(patent_data):
 
 # --- Main Application Logic ---
 if st.session_state.current_view == 'search':
-    # --- CAMBIO DE TÍTULO Y ALINEACIÓN ---
     st.markdown("<h1 style='font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;'>Brújula Tecnológica Territorial</h1>", unsafe_allow_html=True)
 
     with st.form(key='search_form'):
@@ -296,9 +295,8 @@ elif st.session_state.current_view == 'detail':
         # 1. Título de ancho completo
         st.markdown(f"<h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>", unsafe_allow_html=True)
 
-        # --- CAMBIO DE LAYOUT Y TÍTULOS ---
         # 2. Crear dos columnas para la imagen y el resumen
-        col1, col2 = st.columns([0.6, 0.4], gap="large")
+        col1, col2 = st.columns([0.5, 0.5], gap="large")
 
         with col1:
             # Columna de la izquierda para la imagen
