@@ -316,7 +316,7 @@ elif st.session_state.current_view == 'detail':
         col1, col2 = st.columns([0.5, 0.5], gap="small")
 
         with col1:
-            # Se crea el HTML para la imagen y su caja
+            # Se crea el HTML para la imagen y su caja, y se renderiza con st.markdown
             default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
             image_html = f"""
             <div class='bordered-box'>
@@ -324,8 +324,7 @@ elif st.session_state.current_view == 'detail':
                 <img src="{patent.get('image_url') or default_image}" alt="Imagen de la patente">
             </div>
             """
-            # Se renderiza el componente HTML con altura automática
-            st.components.v1.html(image_html, height=None)
+            st.markdown(image_html, unsafe_allow_html=True)
 
         with col2:
             # Se crea el HTML para el resumen y su caja
