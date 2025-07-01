@@ -115,22 +115,23 @@ st.markdown(
         }
         
         /* --- ESTILOS PARA VISTA DE DETALLE --- */
-        .title-box {
-            background-color: #e0f2f7; /* Color de fondo solo para el título */
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-        .content-box {
-            background-color: #ffffff; /* Fondo blanco para las cajas de contenido */
+        .bordered-box {
+            background-color: #ffffff; /* Fondo blanco */
             border: 2px solid #e0f2f7; /* Borde con el color de la app */
             padding: 1.5rem;
             border-radius: 0.75rem;
             height: 100%;
         }
-        .content-box img {
+        .bordered-box img {
             width: 100%;
             border-radius: 0.5rem;
+        }
+        .title-container-bordered {
+             background-color: #ffffff;
+             border: 2px solid #e0f2f7;
+             padding: 1.5rem;
+             border-radius: 0.75rem;
+             margin-bottom: 1.5rem;
         }
         .full-patent-title {
             font-size: 1.8rem;
@@ -304,9 +305,9 @@ if st.session_state.current_view == 'search':
 elif st.session_state.current_view == 'detail':
     patent = st.session_state.selected_patent
     if patent:
-        # 1. Título de ancho completo con fondo de color
+        # 1. Título de ancho completo con borde
         st.markdown(f"""
-        <div class="title-box">
+        <div class="title-container-bordered">
             <h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>
         </div>
         """, unsafe_allow_html=True)
@@ -318,17 +319,17 @@ elif st.session_state.current_view == 'detail':
             # Se crea el HTML para la imagen y su caja, y se renderiza con st.components.v1.html
             default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
             image_html = f"""
-            <div class='content-box'>
+            <div class='bordered-box'>
                 <h2 class='detail-subtitle'>Imagen</h2>
                 <img src="{patent.get('image_url') or default_image}" alt="Imagen de la patente">
             </div>
             """
-            st.components.v1.html(image_html, height=400)
+            st.components.v1.html(image_html, height=400, scrolling=True)
 
         with col2:
             # Se crea el HTML para el resumen y su caja, y se renderiza con st.markdown
             summary_html = f"""
-            <div class='content-box'>
+            <div class='bordered-box'>
                 <h2 class='detail-subtitle'>Resumen</h2>
                 <p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>
             </div>
