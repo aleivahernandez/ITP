@@ -6,7 +6,7 @@ import io
 import html
 
 # --- Configuración de la aplicación Streamlit ---
-st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
+st.set_page_config(layout="wide", page_title="Brújula Tecnológica Territorial")
 
 # Custom CSS for a better visual match to Google Patents style
 st.markdown(
@@ -127,6 +127,12 @@ st.markdown(
             color: #1a0dab;
             margin-bottom: 1rem;
         }
+        .detail-subtitle {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
         .full-patent-abstract {
             font-size: 1.1rem;
             line-height: 1.6;
@@ -219,7 +225,8 @@ def show_patent_detail(patent_data):
 
 # --- Main Application Logic ---
 if st.session_state.current_view == 'search':
-    st.markdown("<h2 style='text-align: center; font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
+    # --- CAMBIO DE TÍTULO Y ALINEACIÓN ---
+    st.markdown("<h1 style='font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;'>Brújula Tecnológica Territorial</h1>", unsafe_allow_html=True)
 
     with st.form(key='search_form'):
         problem_description = st.text_area(
@@ -289,16 +296,19 @@ elif st.session_state.current_view == 'detail':
         # 1. Título de ancho completo
         st.markdown(f"<h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>", unsafe_allow_html=True)
 
+        # --- CAMBIO DE LAYOUT Y TÍTULOS ---
         # 2. Crear dos columnas para la imagen y el resumen
-        col1, col2 = st.columns([0.3, 0.7], gap="large")
+        col1, col2 = st.columns([0.6, 0.4], gap="large")
 
         with col1:
             # Columna de la izquierda para la imagen
+            st.markdown("<h2 class='detail-subtitle'>Imagen</h2>", unsafe_allow_html=True)
             default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
             st.image(patent.get('image_url') or default_image, use_container_width=True)
 
         with col2:
             # Columna de la derecha para el resumen (abstract)
+            st.markdown("<h2 class='detail-subtitle'>Resumen</h2>", unsafe_allow_html=True)
             st.markdown(f"<p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>", unsafe_allow_html=True)
 
         # 3. Metadatos y botón de volver
