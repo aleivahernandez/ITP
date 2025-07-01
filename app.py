@@ -115,18 +115,22 @@ st.markdown(
         }
         
         /* --- ESTILOS PARA VISTA DE DETALLE --- */
-        .title-box, .content-box {
-            background-color: #e0f2f7; /* Color de fondo */
+        .title-box {
+            background-color: #e0f2f7; /* Color de fondo solo para el título */
             padding: 1.5rem;
             border-radius: 0.75rem;
             margin-bottom: 1.5rem;
         }
         .content-box {
-            height: 100%; /* Asegura que las cajas en columnas tengan la misma altura */
+            background-color: #ffffff; /* Fondo blanco para las cajas de contenido */
+            border: 2px solid #e0f2f7; /* Borde con el color de la app */
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            height: 100%;
         }
         .content-box img {
             width: 100%;
-            border-radius: 0.5rem; /* Esquinas redondeadas para la imagen */
+            border-radius: 0.5rem;
         }
         .full-patent-title {
             font-size: 1.8rem;
@@ -300,7 +304,7 @@ if st.session_state.current_view == 'search':
 elif st.session_state.current_view == 'detail':
     patent = st.session_state.selected_patent
     if patent:
-        # 1. Título de ancho completo con fondo
+        # 1. Título de ancho completo con fondo de color
         st.markdown(f"""
         <div class="title-box">
             <h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>
