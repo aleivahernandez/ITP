@@ -118,6 +118,7 @@ st.markdown(
             padding: 1rem 1.5rem;
             border-radius: 0.75rem;
             margin-bottom: 1.5rem;
+            height: 100%; /* Asegura que las cajas tengan la misma altura */
         }
         .full-patent-title {
             font-size: 1.8rem;
@@ -302,17 +303,25 @@ elif st.session_state.current_view == 'detail':
         col1, col2 = st.columns([0.5, 0.5], gap="small")
 
         with col1:
-            # Usar un contenedor con borde para la imagen y su título
-            with st.container(border=True):
-                 st.markdown("<h2 class='detail-subtitle'>Imagen</h2>", unsafe_allow_html=True)
-                 default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
-                 st.image(patent.get('image_url') or default_image, use_container_width=True)
+            # Contenedor para la imagen y su título
+            st.markdown("""
+            <div class='content-box-bordered'>
+                <h2 class='detail-subtitle'>Imagen</h2>
+            """, unsafe_allow_html=True)
+            default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
+            st.image(patent.get('image_url') or default_image, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
         with col2:
-            # Usar un contenedor con borde para el resumen y su título
-            with st.container(border=True):
-                st.markdown("<h2 class='detail-subtitle'>Resumen</h2>", unsafe_allow_html=True)
-                st.markdown(f"<p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>", unsafe_allow_html=True)
+            # Contenedor para el resumen y su título
+            summary_html = f"""
+            <div class='content-box-bordered'>
+                <h2 class='detail-subtitle'>Resumen</h2>
+                <p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>
+            </div>
+            """
+            st.markdown(summary_html, unsafe_allow_html=True)
 
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
