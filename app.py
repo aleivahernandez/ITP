@@ -121,11 +121,23 @@ st.markdown(
         }
 
         /* --- Styles for the full patent view (Detail View) --- */
+        .title-container {
+            background-color: #eeffcd;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .content-box {
+            background-color: #efffe1;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            height: 100%;
+        }
         .full-patent-title {
             font-size: 1.8rem;
             font-weight: 700;
             color: #1a0dab;
-            margin-bottom: 1rem;
+            margin-bottom: 0; /* Margin is now on the container */
         }
         .detail-subtitle {
             font-size: 1.2rem;
@@ -293,22 +305,30 @@ if st.session_state.current_view == 'search':
 elif st.session_state.current_view == 'detail':
     patent = st.session_state.selected_patent
     if patent:
-        # 1. Título de ancho completo
-        st.markdown(f"<h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>", unsafe_allow_html=True)
+        # 1. Título de ancho completo con fondo
+        st.markdown(f"""
+        <div class="title-container">
+            <h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>
+        </div>
+        """, unsafe_allow_html=True)
 
         # 2. Crear dos columnas para la imagen y el resumen
         col1, col2 = st.columns([0.5, 0.5], gap="large")
 
         with col1:
-            # Columna de la izquierda para la imagen
+            # Envolver contenido en un div con fondo
+            st.markdown("<div class='content-box'>", unsafe_allow_html=True)
             st.markdown("<h2 class='detail-subtitle'>Imagen</h2>", unsafe_allow_html=True)
             default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
             st.image(patent.get('image_url') or default_image, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         with col2:
-            # Columna de la derecha para el resumen (abstract)
+            # Envolver contenido en un div con fondo
+            st.markdown("<div class='content-box'>", unsafe_allow_html=True)
             st.markdown("<h2 class='detail-subtitle'>Resumen</h2>", unsafe_allow_html=True)
             st.markdown(f"<p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
