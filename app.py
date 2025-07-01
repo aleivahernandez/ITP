@@ -442,31 +442,31 @@ elif st.session_state.current_view == 'detail':
         # 1. Título de ancho completo
         st.markdown(f"<h1 class='full-patent-title'>{html.escape(selected_patent['title'])}</h1>", unsafe_allow_html=True)
         
-        # --- INICIO: ESTRUCTURA DE 2 COLUMNAS CORREGIDA ---
+        # --- INICIO: ESTRUCTURA DE 2 COLUMNAS ---
         
         # Prepara la columna de la imagen (solo si existe una URL)
         image_column_html = ""
         if selected_patent.get('image_url'):
-            image_column_html = f\"\"\"
+            image_column_html = f"""
             <div class='detail-image-column'>
                 <img src="{selected_patent['image_url']}" alt="Imagen de la patente">
             </div>
-            \"\"\"
+            """
         
         # Construye el cuerpo principal que contiene las columnas
-        body_html = f\"\"\"
+        body_html = f"""
         <div class='detail-body-container'>
             {image_column_html}
             <div class='detail-abstract-column'>
                 <p class='full-patent-abstract'>{html.escape(selected_patent['abstract'])}</p>
             </div>
         </div>
-        \"\"\"
+        """
 
         # Llama a st.markdown UNA SOLA VEZ para el cuerpo, asegurando que se interprete el HTML
         st.markdown(body_html, unsafe_allow_html=True)
         
-        # --- FIN: ESTRUCTURA CORREGIDA ---
+        # --- FIN: ESTRUCTURA ---
 
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {selected_patent['publication_number']}</p>", unsafe_allow_html=True)
