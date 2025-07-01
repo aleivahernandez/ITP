@@ -129,14 +129,9 @@ st.markdown(
         }
 
         /* --- Styles for the full patent view (Detail View) --- */
-        /* Eliminamos .full-patent-view-container porque el contenido de detalle
-           ahora se mostrará directamente dentro de .stApp.
-           Si necesitas un padding adicional interno para los detalles, puedes agregarlo a un div con esta clase. */
         .detail-content-wrapper {
-            /* Esto es un envoltorio para dar un padding adicional al contenido de la patente dentro de .stApp */
-            padding-top: 0.5rem; /* Ajusta según necesites más espacio en la parte superior */
-            padding-bottom: 0.5rem; /* Ajusta según necesites más espacio en la parte inferior */
-            /* No queremos bordes, sombras o fondos aquí, porque ya los maneja .stApp */
+            padding-top: 0.5rem; 
+            padding-bottom: 0.5rem;
         }
 
         .full-patent-title {
@@ -171,6 +166,41 @@ st.markdown(
         .back-button:hover {
             background-color: #5a6268 !important;
         }
+
+        /* --- INICIO: NUEVOS ESTILOS PARA VISTA DETALLADA (2 COLUMNAS) --- */
+        .detail-body-container {
+            display: flex;
+            flex-wrap: wrap; /* Permite que las columnas se reorganicen en pantallas pequeñas */
+            gap: 1.5rem;     /* Espacio entre la imagen y el texto */
+            align-items: flex-start; /* Alinea los items en la parte superior */
+            margin-bottom: 1.5rem; /* Espacio debajo de la sección de dos columnas */
+        }
+
+        .detail-image-column {
+            flex: 1 1 30%;      /* Define la flexibilidad de la columna */
+            max-width: 30%;     /* Límite máximo del 30% del ancho */
+        }
+
+        .detail-image-column img {
+            width: 100%;        /* La imagen ocupa todo el ancho de su columna */
+            height: auto;
+            border-radius: 8px; /* Opcional: suaviza las esquinas de la imagen */
+        }
+
+        .detail-abstract-column {
+            flex: 1 1 65%;      /* Ocupa el espacio restante */
+        }
+
+        /* Media Query para mejorar la responsividad en pantallas pequeñas */
+        @media (max-width: 640px) {
+            .detail-body-container {
+                flex-direction: column; /* Apila la imagen y el texto verticalmente */
+            }
+            .detail-image-column, .detail-abstract-column {
+                max-width: 100%; /* Ambas columnas ocupan el ancho completo */
+            }
+        }
+        /* --- FIN: NUEVOS ESTILOS PARA VISTA DETALLADA --- */
     </style>
     """,
     unsafe_allow_html=True
@@ -237,8 +267,7 @@ def process_patent_data(file_path):
             df[publication_number_col] = df[publication_number_col].fillna('')
 
             # --- Configure GitHub Image Base URL ---
-            # CAMBIO AQUÍ: Nueva URL del repositorio v2
-            github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP_v2/main/images/" 
+            github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP_v2/main/images/"
             # --- End GitHub Image Base URL Configuration ---
 
             # Construct image URLs using Publication Number
@@ -297,7 +326,8 @@ if 'query_description' not in st.session_state: # To persist search query
 def show_search_view():
     st.session_state.current_view = 'search'
     st.session_state.selected_patent = None
-    st.session_state.search_results = [] # Clear previous results when returning to search
+    # No borramos los resultados para que el usuario pueda volver a ellos
+    # st.session_state.search_results = [] 
 
 def show_patent_detail(patent_data):
     st.session_state.current_view = 'detail'
@@ -405,26 +435,53 @@ if st.session_state.current_view == 'search':
 
 
 elif st.session_state.current_view == 'detail':
-    # The .stApp container already has the main border and shadow you want.
-    # We simply render the content directly within it.
-
     selected_patent = st.session_state.selected_patent
     if selected_patent:
-        # We use a div with a class to give internal padding to the patent information,
-        # without adding any extra border, shadow, or background, as the .stApp already handles those.
-        st.markdown(f"<div class='detail-content-wrapper'>", unsafe_allow_html=True)
+        # Envoltorio para todo el contenido del detalle
+        st.markdown("<div class='detail-content-wrapper'>", unsafe_allow_html=True)
+        
+        # 1. Título de ancho completo (sin cambios)
         st.markdown(f"<h1 class='full-patent-title'>{html.escape(selected_patent['title'])}</h1>", unsafe_allow_html=True)
         
-        # Display image if available
-        if selected_patent['image_url']:
-            st.image(selected_patent['image_url'], width=200, output_format="PNG") 
+        # --- INICIO: NUEVA ESTRUCTURA DE 2 COLUMNAS ---
         
-        st.markdown(f"<p class='full-patent-abstract'>{html.escape(selected_patent['abstract'])}</p>", unsafe_allow_html=True)
+        # Prepara el HTML de la columna de la imagen (solo si existe una URL)
+        image_html_content = ""
+        if selected_patent.get('image_url'):
+            image_html_content = f"""
+            <div class='detail-image-column'>
+                <img src="{selected_patent['image_url']}" alt="Imagen de la patente">
+            </div>
+            """
+        
+        # Prepara el HTML de la columna del resumen/descripción
+        abstract_html_content = f"""
+        <div class='detail-abstract-column'>
+            <p class='full-patent-abstract'>{html.escape(selected_patent['abstract'])}</p>
+        </div>
+        """
+
+        # Combina la imagen y el resumen en el contenedor flex
+        st.markdown(f"""
+        <div class='detail-body-container'>
+            {image_html_content}
+            {abstract_html_content}
+        </div>
+        """, unsafe_allow_html=True)
+        # --- FIN: NUEVA ESTRUCTURA DE 2 COLUMNAS ---
+
+        # 3. Metadatos y botón de volver (sin cambios en su lógica)
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {selected_patent['publication_number']}</p>", unsafe_allow_html=True)
-        st.markdown(f"</div>", unsafe_allow_html=True) # Close detail-content-wrapper
+        st.markdown("</div>", unsafe_allow_html=True) # Cierra detail-content-wrapper
         
-        # Back button
-        st.button("Volver a la Búsqueda", on_click=show_search_view, key="back_to_search_btn", help="Regresar a la página de resultados de búsqueda.", type="secondary", use_container_width=True)
+        st.button(
+            "Volver a la Búsqueda", 
+            on_click=show_search_view, 
+            key="back_to_search_btn", 
+            help="Regresar a la página de resultados de búsqueda.", 
+            type="secondary", 
+            use_container_width=True
+        )
     else:
         st.warning("No se ha seleccionado ninguna patente para ver los detalles.")
-        show_search_view() # Redirect to search if no patent is selected
+        show_search_view() # Redirige a la búsqueda si no hay patente seleccionada
