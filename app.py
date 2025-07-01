@@ -295,7 +295,7 @@ elif st.session_state.current_view == 'detail':
         with col1:
             # Columna de la izquierda para la imagen
             default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
-            st.image(patent.get('image_url') or default_image, use_column_width=True)
+            st.image(patent.get('image_url') or default_image, use_container_width=True)
 
         with col2:
             # Columna de la derecha para el resumen (abstract)
