@@ -8,7 +8,7 @@ import html
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Brújula Tecnológica Territorial")
 
-# Custom CSS for a better visual match to Google Patents style
+# Custom CSS
 st.markdown(
     """
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,49 +16,43 @@ st.markdown(
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #e0f2f7; /* Light blue background for the page */
+            background-color: #e0f2f7;
         }
-        /* El contenedor principal de la aplicación Streamlit. */
         .stApp {
-            max-width: 800px; /* Constrain the app width */
-            margin: 2rem auto; /* Center the app on the page */
-            background-color: #ffffff; /* White background for the app container */
-            border-radius: 1.5rem; /* Rounded Corners */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Soft shadow */
-            padding: 2.5rem; /* Padding inside the app container */
+            max-width: 800px;
+            margin: 2rem auto;
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
         }
-        /* Style for the main search input container */
         div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div[data-testid="stTextArea"] {
-            border-radius: 9999px !important; /* Fully rounded */
-            border: 1px solid #d1d5db !important; /* Light gray border */
-            padding: 0.5rem 1.5rem !important; /* Adjust padding */
+            border-radius: 9999px !important;
+            border: 1px solid #d1d5db !important;
+            padding: 0.5rem 1.5rem !important;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-            font-size: 1.125rem !important; /* text-lg */
-            margin-bottom: 1rem; /* Space below the input */
-            resize: none !important; /* Prevent manual resizing */
+            font-size: 1.125rem !important;
+            margin-bottom: 1rem;
+            resize: none !important;
         }
-        /* Style for the submit button */
         button[data-testid="stFormSubmitButton"] {
             background-color: #20c997 !important;
             color: white !important;
-            border-radius: 0.75rem !important; /* Rounded corners */
+            border-radius: 0.75rem !important;
             padding: 0.75rem 1.5rem !important;
             font-weight: 600 !important;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
             transition: background-color 0.2s ease !important;
-            display: block !important; /* Make it a block element */
-            margin: 0 auto 2rem auto !important; /* Center the button and add margin below */
-            width: fit-content; /* Adjust width to content */
+            display: block !important;
+            margin: 0 auto 2rem auto !important;
+            width: fit-content;
         }
         button[data-testid="stFormSubmitButton"]:hover {
             background-color: #1aae89 !important;
         }
-        /* Hide the default label for st.text_area */
         div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] {
             display: none !important;
         }
-
-        /* --- Google Patents style for patent results (Search View) --- */
         .google-patent-result-container {
             background-color: #ffffff;
             border: 1px solid #dadce0;
@@ -119,23 +113,11 @@ st.markdown(
             padding: 0.15rem 0.4rem;
             border-radius: 0.4rem;
         }
-
-        /* --- Styles for the full patent view (Detail View) --- */
-        .title-container {
-            background-color: #eeffcd;
+        .content-box-bordered {
+            border: 2px solid #e0f2f7; /* Borde del color de fondo de la app */
             padding: 1rem 1.5rem;
             border-radius: 0.75rem;
             margin-bottom: 1.5rem;
-        }
-        .summary-box {
-            background-color: #efffe1;
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-        }
-        .image-box {
-            background-color: #efffe1;
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
         }
         .full-patent-title {
             font-size: 1.8rem;
@@ -309,9 +291,9 @@ if st.session_state.current_view == 'search':
 elif st.session_state.current_view == 'detail':
     patent = st.session_state.selected_patent
     if patent:
-        # 1. Título de ancho completo con fondo
+        # 1. Título de ancho completo con borde
         st.markdown(f"""
-        <div class="title-container">
+        <div class="content-box-bordered">
             <h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>
         </div>
         """, unsafe_allow_html=True)
@@ -320,25 +302,17 @@ elif st.session_state.current_view == 'detail':
         col1, col2 = st.columns([0.5, 0.5], gap="large")
 
         with col1:
-            # Contenedor para la imagen y su título
-            st.markdown("""
-            <div class='image-box'>
-                <h2 class='detail-subtitle'>Imagen</h2>
-            </div>
-            """, unsafe_allow_html=True)
-            default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
-            st.image(patent.get('image_url') or default_image, use_container_width=True)
-
+            # Usar un contenedor con borde para la imagen y su título
+            with st.container(border=True):
+                 st.markdown("<h2 class='detail-subtitle'>Imagen</h2>", unsafe_allow_html=True)
+                 default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
+                 st.image(patent.get('image_url') or default_image, use_container_width=True)
 
         with col2:
-            # Contenedor para el resumen y su título
-            summary_html = f"""
-            <div class='summary-box'>
-                <h2 class='detail-subtitle'>Resumen</h2>
-                <p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>
-            </div>
-            """
-            st.markdown(summary_html, unsafe_allow_html=True)
+            # Usar un contenedor con borde para el resumen y su título
+            with st.container(border=True):
+                st.markdown("<h2 class='detail-subtitle'>Resumen</h2>", unsafe_allow_html=True)
+                st.markdown(f"<p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>", unsafe_allow_html=True)
 
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
