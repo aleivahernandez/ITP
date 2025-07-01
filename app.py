@@ -137,6 +137,7 @@ st.markdown(
             font-size: 1.1rem;
             line-height: 1.6;
             color: #333333;
+            text-align: justify;
         }
         .full-patent-meta {
             font-size: 0.9rem;
