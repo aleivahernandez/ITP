@@ -4,8 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
-# Se elimina gTTS y se importa TTS
-from TTS.api import TTS
+from gtts import gTTS
 from io import BytesIO
 
 # --- Configuración de la aplicación Streamlit ---
@@ -150,19 +149,10 @@ st.markdown(
 
 @st.cache_resource
 def load_embedding_model():
-    """Carga el modelo de embeddings de texto."""
+    """Carga el modelo pre-entrenado SentenceTransformer."""
     with st.spinner("Cargando modelo de semántica..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     return model
-
-@st.cache_resource
-def load_tts_model():
-    """Carga el modelo de texto a voz de Coqui TTS."""
-    with st.spinner("Cargando modelo de voz (la primera vez puede tardar)..."):
-        # Se usará un modelo en español de alta calidad
-        model = TTS("tts_models/es/mai/tacotron2-DDC")
-    return model
-
 
 @st.cache_data
 def process_patent_data(file_path):
@@ -333,17 +323,15 @@ elif st.session_state.current_view == 'detail':
 
                 # Lógica para generar y colocar el audio en el placeholder
                 if play_button:
-                    # Cargar el modelo de voz (se cachea después de la primera vez)
-                    tts_model = load_tts_model()
-                    
-                    text_to_speech = patent.get('abstract', 'No hay resumen disponible.')
-                    
-                    # Generar el audio como una lista de samples
-                    wav_output = tts_model.tts(text=text_to_speech, speaker=tts_model.speakers[0], language=tts_model.languages[0])
-                    
-                    # Mostrar el reproductor de audio
-                    audio_placeholder.audio(np.array(wav_output), sample_rate=tts_model.synthesizer.output_sample_rate)
-
+                    with st.spinner("Generando audio..."):
+                        text_to_speech = patent.get('abstract', 'No hay resumen disponible.')
+                        tts = gTTS(text=text_to_speech, lang='es', slow=False)
+                        
+                        audio_fp = BytesIO()
+                        tts.write_to_fp(audio_fp)
+                        audio_fp.seek(0)
+                        
+                        audio_placeholder.audio(audio_fp, format='audio/mp3')
 
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
