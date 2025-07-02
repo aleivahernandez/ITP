@@ -18,7 +18,7 @@ st.markdown(
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f69b4; /* <-- COLOR CAMBIADO */
+            background-color: #0f69b4;
         }
         .stApp {
             max-width: 800px;
@@ -109,9 +109,9 @@ st.markdown(
         .similarity-score-display {
             font-size: 0.8rem;
             font-weight: 600;
-            color: #ffffff; /* <-- COLOR CAMBIADO */
+            color: #ffffff; 
             margin-left: auto;
-            background-color: #0f69b4; /* <-- COLOR CAMBIADO */
+            background-color: #eb3c46; /* <-- COLOR CAMBIADO */
             padding: 0.15rem 0.4rem;
             border-radius: 0.4rem;
         }
