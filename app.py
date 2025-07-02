@@ -117,35 +117,17 @@ st.markdown(
         }
         
         /* --- ESTILOS PARA VISTA DE DETALLE --- */
-        .bordered-box {
-            background-color: #ffffff; /* Fondo blanco */
-            border: 2px solid #e0f2f7; /* Borde con el color de la app */
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            height: 100%;
-        }
-        .bordered-box img {
-            width: 100%;
-            border-radius: 0.5rem;
-        }
-        .title-container-bordered {
-             background-color: #ffffff;
-             border: 2px solid #e0f2f7;
-             padding: 1.5rem;
-             border-radius: 0.75rem;
-             margin-bottom: 1.5rem;
-        }
         .full-patent-title {
             font-size: 1.8rem;
             font-weight: 700;
             color: #1a0dab;
-            margin: 0;
+            margin-bottom: 0;
         }
         .detail-subtitle {
             font-size: 1.2rem;
             font-weight: 600;
             color: #333;
-            margin-bottom: 0.75rem;
+            padding-top: 8px; /* Alineación vertical con el botón */
         }
         .full-patent-abstract {
             font-size: 1.1rem;
@@ -308,53 +290,44 @@ elif st.session_state.current_view == 'detail':
     patent = st.session_state.selected_patent
     if patent:
         # 1. Título de ancho completo con borde
-        st.markdown(f"""
-        <div class="title-container-bordered">
-            <h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown(f"<h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>", unsafe_allow_html=True)
+        
+        st.markdown("<div style='margin-bottom: 1.5rem;'></div>", unsafe_allow_html=True) # Espaciador
 
         # 2. Crear dos columnas para la imagen y el resumen
         col1, col2 = st.columns([0.5, 0.5], gap="small")
 
         with col1:
-            # Se crea el HTML para la imagen y su caja, y se renderiza con st.markdown
-            default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
-            image_html = f"""
-            <div class='bordered-box'>
-                <h2 class='detail-subtitle'>Imagen</h2>
-                <img src="{patent.get('image_url') or default_image}" alt="Imagen de la patente">
-            </div>
-            """
-            st.markdown(image_html, unsafe_allow_html=True)
+            # Usar un contenedor con borde para la imagen y su título
+            with st.container(border=True):
+                 st.markdown("<h2 class='detail-subtitle'>Imagen</h2>", unsafe_allow_html=True)
+                 default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
+                 st.image(patent.get('image_url') or default_image, use_container_width=True)
 
         with col2:
-            # Usar un contenedor para poder añadir el botón y el audio debajo del resumen
-            with st.container():
-                # Se crea el HTML para el resumen y su caja
-                summary_html = f"""
-                <div class='bordered-box'>
-                    <h2 class='detail-subtitle'>Resumen</h2>
-                    <p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>
-                </div>
-                """
-                st.markdown(summary_html, unsafe_allow_html=True)
+            # Usar un contenedor con borde para el resumen y su título
+            with st.container(border=True):
+                # Fila para el subtítulo y el botón de audio
+                header_cols = st.columns([0.8, 0.2])
+                with header_cols[0]:
+                    st.markdown("<h2 class='detail-subtitle'>Resumen</h2>", unsafe_allow_html=True)
+                with header_cols[1]:
+                    play_button = st.button("🔊", key="play_audio", help="Escuchar resumen")
 
-                # --- LÓGICA DEL BOTÓN DE AUDIO ---
-                if st.button("▶️ Escuchar Resumen", use_container_width=True):
+                # Párrafo del resumen
+                st.markdown(f"<p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>", unsafe_allow_html=True)
+
+                # Lógica para generar y mostrar el audio si se presiona el botón
+                if play_button:
                     with st.spinner("Generando audio..."):
-                        # Extraer el texto del resumen
                         text_to_speech = patent.get('abstract', 'No hay resumen disponible.')
-                        
-                        # Crear el objeto de audio en español
                         tts = gTTS(text=text_to_speech, lang='es', slow=False)
                         
-                        # Guardar el audio en un archivo en memoria
                         audio_fp = BytesIO()
                         tts.write_to_fp(audio_fp)
                         audio_fp.seek(0)
                         
-                        # Mostrar el reproductor de audio
                         st.audio(audio_fp, format='audio/mp3')
 
         # 3. Metadatos y botón de volver
