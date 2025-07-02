@@ -150,7 +150,7 @@ st.markdown(
 @st.cache_resource
 def load_embedding_model():
     """Carga el modelo pre-entrenado SentenceTransformer."""
-    with st.spinner("Cargando modelo de semántica..."):
+    with st.spinner("Cargando el modelo de embeddings..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     return model
 
