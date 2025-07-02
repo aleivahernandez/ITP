@@ -315,10 +315,13 @@ elif st.session_state.current_view == 'detail':
                 with header_cols[1]:
                     play_button = st.button("🔊", key="play_audio", help="Escuchar resumen")
 
+                # Placeholder para el reproductor de audio
+                audio_placeholder = st.empty()
+
                 # Párrafo del resumen
                 st.markdown(f"<p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>", unsafe_allow_html=True)
 
-                # Lógica para generar y mostrar el audio si se presiona el botón
+                # Lógica para generar y colocar el audio en el placeholder
                 if play_button:
                     with st.spinner("Generando audio..."):
                         text_to_speech = patent.get('abstract', 'No hay resumen disponible.')
@@ -328,7 +331,7 @@ elif st.session_state.current_view == 'detail':
                         tts.write_to_fp(audio_fp)
                         audio_fp.seek(0)
                         
-                        st.audio(audio_fp, format='audio/mp3')
+                        audio_placeholder.audio(audio_fp, format='audio/mp3')
 
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
