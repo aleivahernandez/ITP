@@ -4,6 +4,8 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import io
 import html
+from gtts import gTTS
+from io import BytesIO
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Brújula Tecnológica Territorial")
@@ -327,14 +329,33 @@ elif st.session_state.current_view == 'detail':
             st.markdown(image_html, unsafe_allow_html=True)
 
         with col2:
-            # Se crea el HTML para el resumen y su caja
-            summary_html = f"""
-            <div class='bordered-box'>
-                <h2 class='detail-subtitle'>Resumen</h2>
-                <p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>
-            </div>
-            """
-            st.markdown(summary_html, unsafe_allow_html=True)
+            # Usar un contenedor para poder añadir el botón y el audio debajo del resumen
+            with st.container():
+                # Se crea el HTML para el resumen y su caja
+                summary_html = f"""
+                <div class='bordered-box'>
+                    <h2 class='detail-subtitle'>Resumen</h2>
+                    <p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>
+                </div>
+                """
+                st.markdown(summary_html, unsafe_allow_html=True)
+
+                # --- LÓGICA DEL BOTÓN DE AUDIO ---
+                if st.button("▶️ Escuchar Resumen", use_container_width=True):
+                    with st.spinner("Generando audio..."):
+                        # Extraer el texto del resumen
+                        text_to_speech = patent.get('abstract', 'No hay resumen disponible.')
+                        
+                        # Crear el objeto de audio en español
+                        tts = gTTS(text=text_to_speech, lang='es', slow=False)
+                        
+                        # Guardar el audio en un archivo en memoria
+                        audio_fp = BytesIO()
+                        tts.write_to_fp(audio_fp)
+                        audio_fp.seek(0)
+                        
+                        # Mostrar el reproductor de audio
+                        st.audio(audio_fp, format='audio/mp3')
 
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
