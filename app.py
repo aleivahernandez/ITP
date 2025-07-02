@@ -333,24 +333,6 @@ elif st.session_state.current_view == 'detail':
                         
                         audio_placeholder.audio(audio_fp, format='audio/mp3')
 
-                        # --- INICIO DEL CAMBIO ---
-                        # Inyectar JavaScript para cambiar la velocidad de reproducción a 1.5x
-                        st.markdown(
-                            """
-                            <script>
-                                // Espera un breve momento para que el elemento de audio se cargue en la página
-                                setTimeout(() => {
-                                    const audio = parent.document.querySelector('audio');
-                                    if (audio) {
-                                        audio.playbackRate = 1.5;
-                                    }
-                                }, 200);
-                            </script>
-                            """,
-                            unsafe_allow_html=True
-                        )
-                        # --- FIN DEL CAMBIO ---
-
         # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
         st.button("Volver a la Búsqueda", on_click=show_search_view, use_container_width=True)
