@@ -1,6 +1,6 @@
 streamlit
 pandas
-openpyxl
 sentence-transformers
 numpy
-
+gTTS
+openpyxl
