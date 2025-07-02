@@ -18,7 +18,7 @@ st.markdown(
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #e0f2f7;
+            background-color: #0f69b4; /* <-- COLOR CAMBIADO */
         }
         .stApp {
             max-width: 800px;
@@ -109,9 +109,9 @@ st.markdown(
         .similarity-score-display {
             font-size: 0.8rem;
             font-weight: 600;
-            color: #20c997;
+            color: #ffffff; /* <-- COLOR CAMBIADO */
             margin-left: auto;
-            background-color: #e0f2f7;
+            background-color: #0f69b4; /* <-- COLOR CAMBIADO */
             padding: 0.15rem 0.4rem;
             border-radius: 0.4rem;
         }
@@ -150,7 +150,7 @@ st.markdown(
 @st.cache_resource
 def load_embedding_model():
     """Carga el modelo pre-entrenado SentenceTransformer."""
-    with st.spinner("Cargando el modelo de embeddings..."):
+    with st.spinner("Cargando modelo de semántica..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     return model
 
