@@ -6,12 +6,12 @@ import io
 import html
 from gtts import gTTS
 from io import BytesIO
-from deep_translator import GoogleTranslator # MODIFICADO: Nueva librería
+from deep_translator import GoogleTranslator
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Brújula Tecnológica Territorial")
 
-# Custom CSS (sin cambios, se omite por brevedad)
+# Custom CSS
 st.markdown(
     """
     <script src="https://cdn.tailwindcss.com"></script>
@@ -155,14 +155,15 @@ def load_embedding_model():
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     return model
 
-# MODIFICADO: Nueva función de traducción compatible con deep-translator
+# MODIFICADO: Se añade un guion bajo al argumento 'translator'
 @st.cache_data
-def translate_text_to_spanish(text, translator):
+def translate_text_to_spanish(text, _translator):
     """Traduce texto a español usando deep-translator."""
     if not isinstance(text, str) or not text.strip():
         return ""
     try:
-        return translator.translate(text)
+        # MODIFICADO: Se usa _translator para llamar al método
+        return _translator.translate(text)
     except Exception as e:
         print(f"Error de traducción: {e}")
         return text # Devuelve el original en caso de error
@@ -191,10 +192,10 @@ def process_patent_data(file_path):
 
             # --- SECCIÓN DE TRADUCCIÓN ---
             with st.spinner("Traduciendo textos al español (esto puede tardar unos minutos)..."):
-                # MODIFICADO: Instancia del nuevo traductor
                 translator = GoogleTranslator(source='auto', target='es')
                 progress_bar = st.progress(0, text="Traduciendo títulos...")
 
+                # La llamada aquí no cambia
                 df['title_es'] = df['title (original language)'].apply(
                     lambda x: translate_text_to_spanish(x, translator)
                 )
@@ -250,7 +251,7 @@ def show_patent_detail(patent_data):
     st.session_state.current_view = 'detail'
     st.session_state.selected_patent = patent_data
 
-# --- Main Application Logic (sin cambios) ---
+# --- Main Application Logic ---
 if st.session_state.current_view == 'search':
     st.markdown("<h1 style='font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;'>Brújula Tecnológica Territorial</h1>", unsafe_allow_html=True)
 
