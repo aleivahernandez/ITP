@@ -6,12 +6,12 @@ import io
 import html
 from gtts import gTTS
 from io import BytesIO
-from googletrans import Translator
+from deep_translator import GoogleTranslator # MODIFICADO: Nueva librería
 
 # --- Configuración de la aplicación Streamlit ---
 st.set_page_config(layout="wide", page_title="Brújula Tecnológica Territorial")
 
-# Custom CSS
+# Custom CSS (sin cambios, se omite por brevedad)
 st.markdown(
     """
     <script src="https://cdn.tailwindcss.com"></script>
@@ -155,21 +155,17 @@ def load_embedding_model():
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     return model
 
+# MODIFICADO: Nueva función de traducción compatible con deep-translator
 @st.cache_data
 def translate_text_to_spanish(text, translator):
-    """Traduce texto a español, detectando el idioma de origen."""
+    """Traduce texto a español usando deep-translator."""
     if not isinstance(text, str) or not text.strip():
         return ""
     try:
-        # Detecta el idioma, si ya es español, lo devuelve directamente
-        if translator.detect(text).lang == 'es':
-            return text
-        # Si no, lo traduce
-        return translator.translate(text, dest='es').text
+        return translator.translate(text)
     except Exception as e:
-        # En caso de error (ej. texto muy corto, error de API), devuelve el original
         print(f"Error de traducción: {e}")
-        return text
+        return text # Devuelve el original en caso de error
 
 @st.cache_data
 def process_patent_data(file_path):
@@ -195,7 +191,8 @@ def process_patent_data(file_path):
 
             # --- SECCIÓN DE TRADUCCIÓN ---
             with st.spinner("Traduciendo textos al español (esto puede tardar unos minutos)..."):
-                translator = Translator()
+                # MODIFICADO: Instancia del nuevo traductor
+                translator = GoogleTranslator(source='auto', target='es')
                 progress_bar = st.progress(0, text="Traduciendo títulos...")
 
                 df['title_es'] = df['title (original language)'].apply(
@@ -214,7 +211,6 @@ def process_patent_data(file_path):
                 lambda x: f"{github_image_base_url}{x}.png" if x else ""
             )
 
-            # Usar las columnas traducidas para el embedding
             df['Descripción Completa'] = df['title_es'] + ". " + df['abstract_es']
             model = load_embedding_model()
             corpus_embeddings = model.encode(df['Descripción Completa'].tolist(), convert_to_tensor=True)
@@ -254,7 +250,7 @@ def show_patent_detail(patent_data):
     st.session_state.current_view = 'detail'
     st.session_state.selected_patent = patent_data
 
-# --- Main Application Logic ---
+# --- Main Application Logic (sin cambios) ---
 if st.session_state.current_view == 'search':
     st.markdown("<h1 style='font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;'>Brújula Tecnológica Territorial</h1>", unsafe_allow_html=True)
 
@@ -283,7 +279,6 @@ if st.session_state.current_view == 'search':
                     results = []
                     for idx in top_indices:
                         patent_data = df_patents.iloc[idx]
-                        # Usar las columnas traducidas en los resultados
                         results.append({
                             'title': patent_data['title_es'],
                             'abstract': patent_data['abstract_es'],
@@ -324,39 +319,30 @@ if st.session_state.current_view == 'search':
 elif st.session_state.current_view == 'detail':
     patent = st.session_state.selected_patent
     if patent:
-        # 1. Título de ancho completo con borde
         with st.container(border=True):
             st.markdown(f"<h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>", unsafe_allow_html=True)
         
-        st.markdown("<div style='margin-bottom: 1.5rem;'></div>", unsafe_allow_html=True) # Espaciador
+        st.markdown("<div style='margin-bottom: 1.5rem;'></div>", unsafe_allow_html=True)
 
-        # 2. Crear dos columnas para la imagen y el resumen
         col1, col2 = st.columns([0.5, 0.5], gap="small")
 
         with col1:
-            # Usar un contenedor con borde para la imagen y su título
             with st.container(border=True):
                 st.markdown("<h2 class='detail-subtitle'>Imagen</h2>", unsafe_allow_html=True)
                 default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
                 st.image(patent.get('image_url') or default_image, use_container_width=True)
 
         with col2:
-            # Usar un contenedor con borde para el resumen y su título
             with st.container(border=True):
-                # Fila para el subtítulo y el botón de audio
                 header_cols = st.columns([0.8, 0.2])
                 with header_cols[0]:
                     st.markdown("<h2 class='detail-subtitle'>Resumen</h2>", unsafe_allow_html=True)
                 with header_cols[1]:
                     play_button = st.button("🔊", key="play_audio", help="Escuchar resumen")
 
-                # Placeholder para el reproductor de audio
                 audio_placeholder = st.empty()
-
-                # Párrafo del resumen
                 st.markdown(f"<p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>", unsafe_allow_html=True)
 
-                # Lógica para generar y colocar el audio en el placeholder
                 if play_button:
                     with st.spinner("Generando audio..."):
                         text_to_speech = patent.get('abstract', 'No hay resumen disponible.')
@@ -368,7 +354,6 @@ elif st.session_state.current_view == 'detail':
                         
                         audio_placeholder.audio(audio_fp, format='audio/mp3')
 
-        # 3. Metadatos y botón de volver
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
         st.button("Volver a la Búsqueda", on_click=show_search_view, use_container_width=True)
 
